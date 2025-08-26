@@ -1,12 +1,36 @@
 from courses.models import Category, Course, User
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+import cloudinary
+import cloudinary.uploader
+
+class BaseSerializer(serializers.ModelSerializer):
+    def upload_to_cloudinary(self, image_file, folder="uploads"):
+        try:
+            upload_result = cloudinary.uploader.upload(
+                image_file,
+                folder=folder,
+                resource_type="image",
+                transformation=[
+                    {'width': 500, 'height': 500, 'crop': 'limit'},
+                    {'quality': 'auto'}
+                ]
+            )
+            return upload_result.get('secure_url')
+        except Exception as e:
+            raise serializers.ValidationError(f"Lỗi khi upload ảnh: {str(e)}")
+
+    def handle_image_upload(self, validated_data, field_name, folder="uploads"):
+        if field_name in validated_data and validated_data[field_name]:
+            image_file = validated_data[field_name]
+            secure_url = self.upload_to_cloudinary(image_file, folder)
+            validated_data[field_name] = secure_url
+        return validated_data
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
-
 
 class ItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
@@ -22,19 +46,15 @@ class CourseSerializer(ItemSerializer):
         model = Course
         fields = ['id', 'subject', 'image', 'created_date', 'category_id']
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+
+class UserRegistrationSerializer(BaseSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ('username', 'password', 'confirm_password', 'email',
-                  'first_name', 'last_name', 'avatar', 'phone')
-        extra_kwargs = {
-            'email': {'required': True},
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-        }
+                  'first_name', 'last_name', 'avatar', 'phone', 'role')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
@@ -52,18 +72,49 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        validated_data = self.handle_image_upload(validated_data, 'avatar', 'avatars')
         validated_data.pop('confirm_password')
         password = validated_data.pop('password')
 
         user = User.objects.create(**validated_data)
         user.set_password(password)
         user.save()
-
         return user
 
+class UserUpdateSerializer(BaseSerializer):
+    password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
 
-class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'phone', 'date_joined')
+        fields = ('first_name', 'last_name', 'avatar', 'password', 'phone')
+
+    def update(self, instance, validated_data):
+        validated_data = self.handle_image_upload(validated_data, 'avatar', 'avatars')
+        password = validated_data.pop('password', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+        return instance
+
+
+class UserSerializer(BaseSerializer):
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name',
+                  'avatar', 'phone', 'date_joined', 'role')
         read_only_fields = ('id', 'date_joined')
+
+    def get_avatar(self, obj):
+        if obj.avatar:
+            if isinstance(obj.avatar, str):
+                return obj.avatar
+            else:
+                return obj.avatar.url if obj.avatar else None
+        return None

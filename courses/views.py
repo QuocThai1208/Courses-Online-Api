@@ -21,41 +21,59 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     parser_classes = [parsers.MultiPartParser]
 
     def get_serializer_class(self):
-        if self.action == 'register':
+        if self.action in ['register_student', 'register_teacher']:
             return serializers.UserRegistrationSerializer
         return serializers.UserSerializer
 
     def get_permissions(self):
-        if self.action in ['register']:
+        if self.action in ['register_student', 'register_teacher']:
             return [permissions.AllowAny()]
         elif self.action in ['get_current_user']:
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
-    @action(methods=['post'], detail=False, url_path='register')
-    def register(self, request):
-        serializer = self.get_serializer(data=request.data)
+    # Đăng ký học viên
+    @action(methods=['post'], detail=False, url_path='register-student')
+    def register_student(self, request):
+        data = request.data.copy()
+        data['role'] = 'STUDENT'
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
-
             return Response({
-                'message': 'Đăng ký tài khoản thành công!',
+                'message': 'Đăng ký học viên thành công!',
                 'user': serializers.UserSerializer(user).data,
                 'note': 'Vui lòng sử dụng endpoint /o/token/ để lấy access token sau khi đăng ký'
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['get', 'patch'], url_path='current-user', detail=False, permission_classes = [permissions.IsAuthenticated])
+    # Đăng ký giảng viên
+    @action(methods=['post'], detail=False, url_path='register-teacher')
+    def register_teacher(self, request):
+        data = request.data.copy()
+        data['role'] = 'TEACHER'
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                'message': 'Đăng ký giảng viên thành công!',
+                'user': serializers.UserSerializer(user).data,
+                'note': 'Vui lòng sử dụng endpoint /o/token/ để lấy access token sau khi đăng ký'
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['get', 'patch'], url_path='current-user', detail=False,
+            permission_classes=[permissions.IsAuthenticated])
     def get_current_user(self, request):
-        u = request.user
-        if request.method.__eq__('PATCH'):
-            for k, v in request.data.items():
-                if k in ['first_name', 'last_name']:
-                    setattr(u, k, v)
-                elif k.__eq__('password'):
-                    u.set_password(v)
+        user = request.user
+        if request.method == 'PATCH':
+            serializer = serializers.UserUpdateSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializers.UserSerializer(user).data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            u.save()
-
-        return Response(serializers.UserSerializer(u).data)
+        return Response(serializers.UserSerializer(user).data)

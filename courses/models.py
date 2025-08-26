@@ -1,19 +1,25 @@
 from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import enum
+
+class UserRole(enum.Enum):
+    STUDENT = "STUDENT"
+    TEACHER = "TEACHER"
+    ADMIN = "ADMIN"
 
 # Models này chỉ dùng để test !!!!!!!!!
 class User(AbstractUser):
     avatar = CloudinaryField(null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
-
-    # Đảm bảo email là bắt buộc
     email = models.EmailField(unique=True)
-
-    # Đảm bảo first_name và last_name là bắt buộc
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-
+    role = models.CharField(
+        max_length=20,
+        choices=[(role.value, role.name.title()) for role in UserRole],
+        default=UserRole.STUDENT.value
+    )
 
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)
