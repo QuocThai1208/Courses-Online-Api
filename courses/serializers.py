@@ -54,7 +54,7 @@ class UserRegistrationSerializer(BaseSerializer):
     class Meta:
         model = User
         fields = ('username', 'password', 'confirm_password', 'email',
-                  'first_name', 'last_name', 'avatar', 'phone', 'role')
+                  'first_name', 'last_name', 'avatar', 'phone', 'userRole')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
@@ -108,7 +108,7 @@ class UserSerializer(BaseSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'avatar', 'phone', 'date_joined', 'role')
+                  'avatar', 'phone', 'date_joined', 'userRole')
         read_only_fields = ('id', 'date_joined')
 
     def get_avatar(self, obj):
