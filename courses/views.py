@@ -14,6 +14,35 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.filter(active=True)
     serializer_class = serializers.CourseSerializer
     pagination_class = paginators.CoursePagination
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def create(self, request):
+        print("User:", request.user)     
+        serializer = serializers.CourseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(lecturer=request.user) 
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk=None):
+        try:
+            course = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = serializers.CourseSerializer(course, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        try:
+            course = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
