@@ -8,7 +8,6 @@ class UserRole(enum.Enum):
     TEACHER = "TEACHER"
     ADMIN = "ADMIN"
 
-# Models này chỉ dùng để test !!!!!!!!!
 class User(AbstractUser):
     avatar = CloudinaryField(null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
