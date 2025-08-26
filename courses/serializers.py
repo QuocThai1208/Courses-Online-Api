@@ -20,7 +20,7 @@ class ItemSerializer(serializers.ModelSerializer):
 class CourseSerializer(ItemSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image', 'created_date', 'category_id']
+        fields = ['id', 'subject', 'image',  'category_id']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])

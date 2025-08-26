@@ -38,9 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'courses.apps.CoursesConfig',
+    'corsheaders',
     'rest_framework',
     'oauth2_provider',
-    'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -54,6 +57,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'coursesapp.urls'
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
@@ -84,6 +89,15 @@ WSGI_APPLICATION = 'coursesapp.wsgi.application'
 
 AUTH_USER_MODEL = 'courses.User'
 
+
+OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
+
+client_id ='KbAI4XxfmZvpqINch3n36B6sdQlytZgkgBd1FgT7'
+client_secret= 'SKq8Ht89eo0BqbppLX26Aekp2BquhnSVKl3oXKZOIplFpwbVAAOBGwGnY3xlL4hTPNaEQsTlVT8lbkXgZXunw4Tvc21kf6dKnZn5irBUcXzqCq0yS9o76TK77GPM1Q7M'
+
+
+
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 import pymysql
@@ -94,10 +108,22 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'courseonlinedb',
         'USER': 'root',
-        'PASSWORD': 'Admin@123',
+        'PASSWORD': '594362',
         'HOST': ''
     }
 }
+
+
+
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name = "dxw8gtpd8",
+    api_key = "732195383843196",
+    api_secret = "GwsB2gkTHCD5T0CEHwrO2BpKtzc", # Click 'View API Keys' above to copy your API secret
+    secure=True
+)
+
 
 
 # Password validation

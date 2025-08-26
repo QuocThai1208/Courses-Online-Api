@@ -2,43 +2,125 @@ from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# Models này chỉ dùng để test !!!!!!!!!
-class User(AbstractUser):
-    avatar = CloudinaryField(null=True, blank=True)
-    phone = models.CharField(max_length=15, null=True, blank=True)
 
-    # Đảm bảo email là bắt buộc
-    email = models.EmailField(unique=True)
-
-    # Đảm bảo first_name và last_name là bắt buộc
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
 
 
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)
-    created_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True,  null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True,  null=True, blank=True)
 
     class Meta:
         abstract = True
 
 
-class Category(BaseModel):
-    name = models.CharField(max_length=50, unique=True)
+class Role(BaseModel):
+    name = models.CharField(max_length=100, default='')
+    description = models.TextField(default='')
 
     def __str__(self):
         return self.name
 
+class User(AbstractUser):
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    avatar = models.URLField(null=True, blank=True)
+    userRole = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True,  null=True, blank=True)
+
+
+class Permission(BaseModel):
+    name = models.CharField(max_length=100, default='')
+    description = models.TextField(default='')
+    path = models.CharField(max_length=255)
+    method = models.CharField(max_length=20)
+    module = models.CharField(max_length=100)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permissions")
+
+class Category(BaseModel):
+    name = models.CharField(max_length=100, default='')
+    image_url = models.URLField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+  
 
 class Course(BaseModel):
+    class Level(models.TextChoices):
+        SO_CAP = "so_cap", "Sơ cấp"
+        TRUNG_CAP = "trung_cap", "Trung cấp"
+        CAO_CAP = "cao_cap", "Cao cấp"
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    lecturer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lectures", null=True, blank=True)
     subject = models.CharField(max_length=255)
-    description = models.TextField(null=True)
     image = CloudinaryField()
-    category = models.ForeignKey(Category, on_delete=models.PROTECT)
+    name = models.CharField(max_length=255, default='')
+    description = models.TextField(default='')
+    thumbnail_url = models.URLField(null=True, blank=True)
+    video_url = models.URLField(null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    level = models.CharField(
+        max_length=20,
+        choices=Level.choices,
+        default=Level.SO_CAP
+    )
+    duration = models.IntegerField(help_text="Duration in minutes", default=0)
 
-    def __str__(self):
-        return self.subject
 
-    class Meta:
-        ordering = ['-id']
+
+class Chapter(BaseModel):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="chapters", null=True, blank=True)
+    name = models.CharField(max_length=255, default='')
+    description = models.TextField(default='')
+    is_published = models.BooleanField(default=False)
+
+
+
+class Lesson(BaseModel):
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="lessons")
+    name = models.CharField(max_length=255, default='')
+    description = models.TextField(default='')
+    type = models.CharField(max_length=50, default='')
+    video_url = models.URLField(null=True, blank=True)
+    duration = models.IntegerField()
+    is_published = models.BooleanField(default=False)
+
+
+
+class Document(BaseModel):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="documents")
+    name = models.CharField(max_length=255, default='')
+    file_url = models.URLField()
+    type = models.CharField(max_length=50, default='')
+
+
+class Payment(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=50)
+    status = models.CharField(max_length=50)
+
+
+
+class LessonProgress(BaseModel):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    watch_time = models.IntegerField(default=0)
+
+
+class Forum(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name="forum",  null=True, blank=True)
+    name = models.CharField(max_length=255, default='')
+    description = models.TextField(default='')
+    is_locked = models.BooleanField(default=False)
+  
+
+
+class Comment(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments")
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
+    content = models.TextField()
+
