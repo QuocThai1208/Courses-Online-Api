@@ -114,6 +114,9 @@ DATABASES = {
 }
 
 
+MEDIA_ROOT = f'{BASE_DIR}/courses/static/'
+
+
 
 import cloudinary.api
 

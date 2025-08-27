@@ -36,6 +36,13 @@ class Permission(BaseModel):
     module = models.CharField(max_length=100)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permissions")
 
+
+
+class RolePermission(BaseModel):
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+
+
 class Category(BaseModel):
     name = models.CharField(max_length=100, default='')
     image_url = models.URLField(null=True, blank=True)
@@ -53,8 +60,6 @@ class Course(BaseModel):
     image = CloudinaryField()
     name = models.CharField(max_length=255, default='')
     description = models.TextField(default='')
-    thumbnail_url = models.URLField(null=True, blank=True)
-    video_url = models.URLField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     level = models.CharField(
         max_length=20,
@@ -62,6 +67,38 @@ class Course(BaseModel):
         default=Level.SO_CAP
     )
     duration = models.IntegerField(help_text="Duration in minutes", default=0)
+
+
+
+class Payment(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=50)
+    status = models.CharField(max_length=50)
+
+class UserCourse(BaseModel):
+    class Status(models.TextChoices):
+        ENROLLED = "enrolled", "Đã đăng ký"
+        IN_PROGRESS = "in_progress", "Đang học"
+        COMPLETED = "completed", "Hoàn thành"
+        CANCELLED = "cancelled", "Đã hủy"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="students")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ENROLLED
+    )
+
+    Payment= models.OneToOneField(Payment, on_delete=models.CASCADE, related_name="user_course",  null=True, blank= True)
+   
+    class Meta:
+        unique_together = ("user", "course") 
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course.name} ({self.status})"
+
 
 
 
@@ -91,27 +128,20 @@ class Document(BaseModel):
     type = models.CharField(max_length=50, default='')
 
 
-class Payment(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    method = models.CharField(max_length=50)
-    status = models.CharField(max_length=50)
+
 
 
 
 class LessonProgress(BaseModel):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_course = models.ForeignKey(UserCourse, on_delete=models.CASCADE, related_name="lesson_progresses", null= True, blank=True)
     status = models.CharField(max_length=50)
-    started_at = models.DateTimeField(null=True, blank=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
     watch_time = models.IntegerField(default=0)
 
 
 class Forum(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name="forum",  null=True, blank=True)
+    usercourse = models.ForeignKey(UserCourse, on_delete=models.CASCADE, related_name="usercourse",  null=True, blank=True)
     name = models.CharField(max_length=255, default='')
     description = models.TextField(default='')
     is_locked = models.BooleanField(default=False)
