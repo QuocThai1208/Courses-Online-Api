@@ -2,8 +2,12 @@ from rest_framework import viewsets, generics, status, parsers, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from courses.models import Category, Course, User, Role
-from courses import serializers, paginators, perms
+from rest_framework.views import APIView
+import hmac, hashlib
+from courses.models import Category, Course, User, Role, UserCourse
+from courses import serializers, paginators
+from .perms import IsAdmin, IsStudent, IsTeacher
+from .services.momo import create_momo_payment, update_status_user_course
 
 
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -17,12 +21,11 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     pagination_class = paginators.CoursePagination
     permission_classes = [permissions.IsAuthenticated]
 
-
     def create(self, request):
-        print("User:", request.user)     
+        print("User:", request.user)
         serializer = serializers.CourseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(lecturer=request.user) 
+            serializer.save(lecturer=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -44,6 +47,7 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -110,3 +114,70 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializers.UserSerializer(user).data)
+
+
+class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
+    serializer_class = serializers.UserCourseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if IsStudent().has_permission(self.request, self):
+            return UserCourse.objects.filter(user=user)
+        if IsTeacher().has_permission(self.request, self):
+            return UserCourse.objects.filter(lecturer=user)
+        if IsAdmin().has_permission(self.request, self):
+            return UserCourse.objects.all()
+
+    @action(methods=['post'], detail=False, url_path='create', permission_classes=[IsStudent])
+    def create_user_course(self, request):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        user_course = serializer.save()
+        pay_url = create_momo_payment(user_course.course.price, user_course.id)
+
+        data = serializer.data
+        data['payUrl'] = pay_url
+        return Response(data, status=status.HTTP_201_CREATED)
+
+class MomoIPNViewSet(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        user_course_id = data['extraData']
+
+        raw_signature = (
+            f"accessKey=F8BBA842ECF85"
+            f"&amount={data['amount']}"
+            f"&extraData={data['extraData']}"
+            f"&message={data['message']}"
+            f"&orderId={data['orderId']}"
+            f"&orderInfo={data['orderInfo']}"
+            f"&orderType={data['orderType']}"
+            f"&partnerCode={data['partnerCode']}"
+            f"&payType={data['payType']}"
+            f"&requestId={data['requestId']}"
+            f"&responseTime={data['responseTime']}"
+            f"&resultCode={data['resultCode']}"
+            f"&transId={data['transId']}"
+        )
+
+        # tạo chữ ký số
+        signature = hmac.new(
+            'K951B6PE1waDMi640xX08PD3vg6EkVlz'.encode("utf-8"),
+            raw_signature.encode("utf-8"),
+            hashlib.sha256
+        ).hexdigest()
+
+        # xác thực chữ
+        if signature != data.get("signature"):
+            return Response({"message": "Invalid signature"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # thanh toán thành công
+        if data["resultCode"] == 0:
+            update_status_user_course(user_course_id, True)
+            return Response({"message": "Payment success"}, status=status.HTTP_200_OK)
+        # thanh toán thất bại
+        else:
+            update_status_user_course(user_course_id, False)
+            return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
