@@ -1,11 +1,14 @@
 from django.urls import path, include
+
 from . import views
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register('categories', views.CategoryViewSet, basename='category')
 router.register('courses', views.CourseViewSet, basename='course')
 router.register('users', views.UserViewSet, basename='user')
+router.register('enrollments', views.UserCourseViewSet, basename='enrollments')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('payment/momo/ipn/', views.MomoIPNViewSet.as_view(), name='momo-ipn'),
 ]

@@ -76,21 +76,19 @@ TEMPLATES = [
     },
 ]
 
-OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
+OAUTH2_PROVIDER = {'SCOPES': {'read': 'Read scope', 'write': 'Write scope', }}
+REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': (
+    'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    'rest_framework.authentication.TokenAuthentication',
+    'rest_framework.authentication.SessionAuthentication',
+)}
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-    )
-}
 
 
 WSGI_APPLICATION = 'coursesapp.wsgi.application'
 
 AUTH_USER_MODEL = 'courses.User'
 
-
-OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
 
 client_id ='KbAI4XxfmZvpqINch3n36B6sdQlytZgkgBd1FgT7'
 client_secret= 'SKq8Ht89eo0BqbppLX26Aekp2BquhnSVKl3oXKZOIplFpwbVAAOBGwGnY3xlL4hTPNaEQsTlVT8lbkXgZXunw4Tvc21kf6dKnZn5irBUcXzqCq0yS9o76TK77GPM1Q7M'
@@ -109,6 +107,7 @@ DATABASES = {
         'NAME': 'courseonlinedb',
         'USER': 'root',
         'PASSWORD': '594362@Hnt',
+
 
     }
 }

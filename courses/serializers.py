@@ -1,4 +1,4 @@
-from courses.models import Category, Course, User
+from courses.models import Category, Course, User, UserCourse
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 import cloudinary
@@ -118,3 +118,19 @@ class UserSerializer(BaseSerializer):
             else:
                 return obj.avatar.url if obj.avatar else None
         return None
+
+
+class UserCourseSerializer(BaseSerializer):
+    user = serializers.SerializerMethodField(read_only=True)
+    course_subject = serializers.CharField(source="course.subject", read_only=True)
+
+    class Meta:
+        model = UserCourse
+        fields = ['id' , 'user', 'course', 'course_subject', 'status']
+
+    def get_user(self, obj):
+        return obj.user.username
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

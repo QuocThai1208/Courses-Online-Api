@@ -2,13 +2,24 @@ from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+
+class CourseStatus(models.TextChoices):
+    PENDING = 'PENDING', 'Đang chờ thanh toán'
+    IN_PROGRESS = 'IN_PROGRESS', 'Đang học'
+    FAILED ='FAILED', 'Không đạt yêu cầu'
+    COMPLETE = 'COMPLETE', 'Hoàn thành'
+    INACTIVE = 'INACTIVE', 'Bị khóa tài khoản'
+    PAYMENT_FAILED = 'PAYMENT_FAILED', "Thanh toán thất bại"
+
+
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True,  null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True,  null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         abstract = True
+
 
 class Role(BaseModel):
     name = models.CharField(max_length=100, default='')
@@ -17,6 +28,7 @@ class Role(BaseModel):
     def __str__(self):
         return self.name
 
+
 class User(AbstractUser):
     avatar = CloudinaryField(null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
@@ -24,6 +36,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     userRole = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
+
 
 class Permission(BaseModel):
     name = models.CharField(max_length=100, default='')
@@ -34,16 +47,22 @@ class Permission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permissions")
 
 
+<<<<<<< HEAD
 
 class RolePermission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
 
+=======
+>>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
 class Category(BaseModel):
     name = models.CharField(max_length=100, default='')
     image_url = models.URLField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Course(BaseModel):
@@ -51,6 +70,7 @@ class Course(BaseModel):
         SO_CAP = "so_cap", "Sơ cấp"
         TRUNG_CAP = "trung_cap", "Trung cấp"
         CAO_CAP = "cao_cap", "Cao cấp"
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     lecturer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lectures", null=True, blank=True)
     subject = models.CharField(max_length=255)
@@ -65,6 +85,14 @@ class Course(BaseModel):
     )
     duration = models.IntegerField(help_text="Duration in minutes", default=0)
 
+    def __str__(self):
+        return self.name
+
+
+class UserCourse(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_course")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="user_course")
+    status = models.CharField(max_length=20, default=CourseStatus.PENDING, choices=CourseStatus.choices)
 
 
 class Payment(BaseModel):
@@ -106,7 +134,6 @@ class Chapter(BaseModel):
     is_published = models.BooleanField(default=False)
 
 
-
 class Lesson(BaseModel):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="lessons")
     name = models.CharField(max_length=255, default='')
@@ -117,13 +144,11 @@ class Lesson(BaseModel):
     is_published = models.BooleanField(default=False)
 
 
-
 class Document(BaseModel):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="documents")
     name = models.CharField(max_length=255, default='')
     file_url = models.URLField()
     type = models.CharField(max_length=50, default='')
-
 
 
 
@@ -138,11 +163,14 @@ class LessonProgress(BaseModel):
 
 class Forum(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+<<<<<<< HEAD
     usercourse = models.ForeignKey(UserCourse, on_delete=models.CASCADE, related_name="usercourse",  null=True, blank=True)
+=======
+    course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name="forum", null=True, blank=True)
+>>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
     name = models.CharField(max_length=255, default='')
     description = models.TextField(default='')
     is_locked = models.BooleanField(default=False)
-
 
 
 class Comment(BaseModel):
@@ -150,4 +178,3 @@ class Comment(BaseModel):
     forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments")
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     content = models.TextField()
-
