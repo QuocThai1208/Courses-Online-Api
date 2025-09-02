@@ -108,14 +108,23 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'courseonlinedb',
         'USER': 'root',
-        'PASSWORD': 'Admin@123',
-        'HOST': ''
+        'PASSWORD': '594362@Hnt',
+
     }
 }
+
 
 import cloudinary
 import cloudinary.uploader
 from cloudinary.utils import cloudinary_url
+
+
+# MEDIA_ROOT = f'{BASE_DIR}/courses/static/'
+
+
+
+import cloudinary.api
+
 
 cloudinary.config(
     cloud_name='derx1izam',

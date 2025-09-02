@@ -18,8 +18,10 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 
-    def create(self, request):
-        print("User:", request.user)     
+    def create(self, request):  
+        print("Path:", request.path)           # /api/courses/
+        print("Full Path:", request.get_full_path())  # /api/courses/?page=2
+        print("Method:", request.method)
         serializer = serializers.CourseSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(lecturer=request.user) 
@@ -27,6 +29,9 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
+        print("Path:", request.path)           # /api/courses/
+        print("Full Path:", request.get_full_path())  # /api/courses/?page=2
+        print("Method:", request.method)
         try:
             course = Course.objects.get(pk=pk)
         except Course.DoesNotExist:
