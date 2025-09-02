@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
         uses: actions/setup-python@v4
-        with:
-          python-version: "3.8.10"
       - name: Create requirements file
         run: echo "${{secrets.REQUIREMENTS_PRODUCTION}}" > requirements.txt
       - name: Install dependencies
