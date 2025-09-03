@@ -21,16 +21,12 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
     pagination_class = paginators.CoursePagination
     permission_classes = [permissions.IsAuthenticated]
 
-<<<<<<< HEAD
-
     def create(self, request):  
         print("Path:", request.path)           # /api/courses/
         print("Full Path:", request.get_full_path())  # /api/courses/?page=2
         print("Method:", request.method)
-=======
     def create(self, request):
         print("User:", request.user)
->>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
         serializer = serializers.CourseSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(lecturer=request.user)
