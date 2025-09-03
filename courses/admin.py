@@ -1,5 +1,4 @@
 from django.contrib import admin
-<<<<<<< HEAD
 from courses.models import Course, Category, Role, RolePermission, Permission, Payment, UserCourse, Chapter, Document, Lesson, LessonProgress, Forum, Comment
 
 # Register your models here.
@@ -24,7 +23,6 @@ admin.site.register(LessonProgress)
 admin.site.register(Forum)
 
 admin.site.register(Comment)
-=======
 from .models import (
     Role, User, Permission, Category, Course, UserCourse,
     Chapter, Lesson, Document, Payment, LessonProgress,
