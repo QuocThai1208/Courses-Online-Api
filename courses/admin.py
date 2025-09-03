@@ -117,4 +117,3 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "forum", "parent", "content", "created_at")
     list_filter = ("forum",)
     search_fields = ("user__username", "content")
->>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
