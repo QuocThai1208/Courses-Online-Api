@@ -47,15 +47,11 @@ class Permission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permissions")
 
 
-<<<<<<< HEAD
-
 class RolePermission(BaseModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
 
-=======
->>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
 class Category(BaseModel):
     name = models.CharField(max_length=100, default='')
     image_url = models.URLField(null=True, blank=True)
@@ -163,11 +159,8 @@ class LessonProgress(BaseModel):
 
 class Forum(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-<<<<<<< HEAD
     usercourse = models.ForeignKey(UserCourse, on_delete=models.CASCADE, related_name="usercourse",  null=True, blank=True)
-=======
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name="forum", null=True, blank=True)
->>>>>>> fb27eebf7bb3a23c5f7500c6090094484057fae6
     name = models.CharField(max_length=255, default='')
     description = models.TextField(default='')
     is_locked = models.BooleanField(default=False)
