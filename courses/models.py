@@ -97,28 +97,28 @@ class Payment(BaseModel):
     method = models.CharField(max_length=50)
     status = models.CharField(max_length=50)
 
-class UserCourse(BaseModel):
-    class Status(models.TextChoices):
-        ENROLLED = "enrolled", "Đã đăng ký"
-        IN_PROGRESS = "in_progress", "Đang học"
-        COMPLETED = "completed", "Hoàn thành"
-        CANCELLED = "cancelled", "Đã hủy"
+# class UserCourse(BaseModel):
+#     class Status(models.TextChoices):
+#         ENROLLED = "enrolled", "Đã đăng ký"
+#         IN_PROGRESS = "in_progress", "Đang học"
+#         COMPLETED = "completed", "Hoàn thành"
+#         CANCELLED = "cancelled", "Đã hủy"
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="students")
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.ENROLLED
-    )
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
+#     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="students")
+#     status = models.CharField(
+#         max_length=20,
+#         choices=Status.choices,
+#         default=Status.ENROLLED
+#     )
 
-    Payment= models.OneToOneField(Payment, on_delete=models.CASCADE, related_name="user_course",  null=True, blank= True)
+#     Payment= models.OneToOneField(Payment, on_delete=models.CASCADE, related_name="user_course",  null=True, blank= True)
    
-    class Meta:
-        unique_together = ("user", "course") 
+#     class Meta:
+#         unique_together = ("user", "course") 
 
-    def __str__(self):
-        return f"{self.user.username} - {self.course.name} ({self.status})"
+#     def __str__(self):
+#         return f"{self.user.username} - {self.course.name} ({self.status})"
 
 
 

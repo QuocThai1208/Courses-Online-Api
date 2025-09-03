@@ -106,7 +106,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'courseonlinedb',
         'USER': 'root',
-        'PASSWORD': '594362@Hnt',
+        'PASSWORD': '594362',
 
 
     }
