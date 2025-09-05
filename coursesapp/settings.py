@@ -90,10 +90,6 @@ WSGI_APPLICATION = 'coursesapp.wsgi.application'
 AUTH_USER_MODEL = 'courses.User'
 
 
-client_id ='KbAI4XxfmZvpqINch3n36B6sdQlytZgkgBd1FgT7'
-client_secret= 'SKq8Ht89eo0BqbppLX26Aekp2BquhnSVKl3oXKZOIplFpwbVAAOBGwGnY3xlL4hTPNaEQsTlVT8lbkXgZXunw4Tvc21kf6dKnZn5irBUcXzqCq0yS9o76TK77GPM1Q7M'
-
-
 
 
 # Database

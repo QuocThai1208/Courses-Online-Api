@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import hmac, hashlib
-from courses.models import Category, Course, User, Role, UserCourse
+from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment
 from courses import serializers, paginators
 from .perms import IsAdmin, IsStudent, IsTeacher
 from .services.momo import create_momo_payment, update_status_user_course
@@ -47,6 +47,15 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['get'], detail=True, url_path='forum')
+    def get_forum(self, request, pk=None):
+        course = self.get_object()
+        try:
+            forum = course.forum
+        except Forum.DoesNotExist:
+            return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
@@ -181,3 +190,33 @@ class MomoIPNViewSet(APIView):
         else:
             update_status_user_course(user_course_id, False)
             return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
+
+
+class ForumViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
+    serializer_class = serializers.ForumSerializer
+    permission_classes = [IsTeacher]
+
+    def get_queryset(self):
+        user = self.request.user
+        if IsTeacher().has_permission(self.request, self):
+            return Forum.objects.filter(user=user)
+        elif IsAdmin().has_permission(self.request, self):
+            return Forum.objects.all()
+
+
+class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
+    serializer_class = serializers.CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Comment.objects.filter(parent=None)
+
+    @action(methods=['get'], detail=True, url_path='replies', permission_classes=[permissions.IsAuthenticated])
+    def get_replies(self, request, pk=None):
+        comment = self.get_object()
+        try:
+            relies = comment.replies
+        except Comment.DoesNotExist:
+            return Response('Comment not found relies', status=status.HTTP_200_OK)
+        return Response(serializers.CommentSerializer(relies, many=True).data, status=status.HTTP_200_OK)
+

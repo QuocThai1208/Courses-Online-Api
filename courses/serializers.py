@@ -1,8 +1,9 @@
-from courses.models import Category, Course, User, UserCourse
+from courses.models import Category, Course, User, UserCourse, Forum, Comment
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 import cloudinary
 import cloudinary.uploader
+
 
 class BaseSerializer(serializers.ModelSerializer):
     def upload_to_cloudinary(self, image_file, folder="uploads"):
@@ -27,10 +28,12 @@ class BaseSerializer(serializers.ModelSerializer):
             validated_data[field_name] = secure_url
         return validated_data
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
+
 
 class ItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
@@ -44,7 +47,7 @@ class ItemSerializer(serializers.ModelSerializer):
 class CourseSerializer(ItemSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image',  'category_id']
+        fields = ['id', 'subject', 'image', 'category_id']
 
 
 class UserRegistrationSerializer(BaseSerializer):
@@ -80,6 +83,7 @@ class UserRegistrationSerializer(BaseSerializer):
         user.set_password(password)
         user.save()
         return user
+
 
 class UserUpdateSerializer(BaseSerializer):
     password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
@@ -126,10 +130,50 @@ class UserCourseSerializer(BaseSerializer):
 
     class Meta:
         model = UserCourse
-        fields = ['id' , 'user', 'course', 'course_subject', 'status']
+        fields = ['id', 'user', 'course', 'course_subject', 'status']
 
     def get_user(self, obj):
         return obj.user.username
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class UserNameMixin:
+    def get_username(self, obj):
+        return obj.user.username
+
+
+class ForumSerializer(serializers.ModelSerializer, UserNameMixin):
+    user = serializers.SerializerMethodField(read_only=True)
+    course_name = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Forum
+        fields = ['user', 'course', 'course_name', 'name', 'description', 'is_locked']
+
+    def get_user(self, obj):
+        return self.get_username(obj)
+
+    def get_course_name(self, obj):
+        return obj.course.name
+    
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+
+class CommentSerializer(serializers.ModelSerializer, UserNameMixin):
+    user = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['user', 'forum', 'parent', 'content']
+
+    def get_user(self, obj):
+        return self.get_username(obj)
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
