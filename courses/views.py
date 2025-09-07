@@ -110,6 +110,23 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(methods=['post'], detail=False, url_path='register-admin')
+    def register_teacher(self, request):
+        data = request.data.copy()
+        admin_role = get_object_or_404(Role, pk=3)
+        print(teacher_role)
+        data['userRole'] = admin_role.pk
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                'message': 'Đăng ký admin thành công!',
+                'user': serializers.UserSerializer(user).data,
+                'note': 'Vui lòng sử dụng endpoint /o/token/ để lấy access token sau khi đăng ký'
+            }, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(methods=['get', 'patch'], url_path='current-user', detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def get_current_user(self, request):
