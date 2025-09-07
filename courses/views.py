@@ -2,7 +2,7 @@ from rest_framework import viewsets, generics, status, parsers, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from courses.models import Category, Course, User, Role
+from courses.models import Category, Course, User, Role, Chapter, Lesson
 from courses import serializers, paginators, perms
 
 
@@ -10,40 +10,53 @@ class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
     serializer_class = serializers.CategorySerializer
 
-
-class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
+class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.filter(active=True)
     serializer_class = serializers.CourseSerializer
     pagination_class = paginators.CoursePagination
     permission_classes = [permissions.IsAuthenticated]
 
+    def perform_create(self, serializer):
+        serializer.save(lecturer=self.request.user)
 
-    def create(self, request):
-        print("User:", request.user)     
-        serializer = serializers.CourseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(lecturer=request.user) 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        request = self.request
 
-    def partial_update(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CourseSerializer(course, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        lecturer_id = request.query_params.get('lecturer')
+        category_id = request.query_params.get('category')
+        min_price = request.query_params.get('min_price')
+        max_price = request.query_params.get('max_price')
+        level = request.query_params.get('level')
 
-    def destroy(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        course.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if lecturer_id:
+            queryset = queryset.filter(lecturer_id=lecturer_id)
+
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+
+        if level:
+            queryset = queryset.filter(level=level)
+
+        return queryset
+
+class ChapterViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.ChapterSerializer
+    pagination_class = paginators.ChapterPagination
+    queryset = Chapter.objects.all()
+
+class LessonViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.LessonSerializer
+    pagination_class = paginators.LessonPagination
+    queryset = Lesson.objects.all()
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)

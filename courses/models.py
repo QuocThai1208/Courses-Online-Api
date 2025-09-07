@@ -69,7 +69,6 @@ class Chapter(BaseModel):
     is_published = models.BooleanField(default=False)
 
 
-
 class Lesson(BaseModel):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name="lessons")
     name = models.CharField(max_length=255, default='')
