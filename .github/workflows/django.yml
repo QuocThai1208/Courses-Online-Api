@@ -9,12 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Create requirements file
-        run: echo "${{secrets.REQUIREMENTS_PRODUCTION}}" | sed 's/^\xEF\xBB\xBF//' > requirements.txt
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+
 
   deploy:
     runs-on: ubuntu-latest
@@ -34,7 +29,6 @@ jobs:
             cd ~/Courses-Online-Api
             git fetch --all
             git reset --hard origin/main
-            echo "${{secrets.REQUIREMENTS_PRODUCTION}}" > requirements.txt
             source venv/bin/activate
             pip install -r requirements.txt
             python manage.py makemigrations
