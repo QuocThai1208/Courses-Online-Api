@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create requirements file
-        run: echo "${{secrets.REQUIREMENTS_PRODUCTION}}" > requirements.txt
+        run: echo "${{secrets.REQUIREMENTS_PRODUCTION}}" | sed 's/^\xEF\xBB\xBF//' > requirements.txt
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
