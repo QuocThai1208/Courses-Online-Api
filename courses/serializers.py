@@ -1,4 +1,4 @@
-from courses.models import Category, Course, User, UserCourse, Forum, Comment
+from courses.models import Category, Course, User, UserCourse, Forum, Comment, Chapter, Lesson
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 import cloudinary
@@ -34,6 +34,11 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name']
 
+class TeacherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name']
+
 
 class ItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
@@ -47,7 +52,28 @@ class ItemSerializer(serializers.ModelSerializer):
 class CourseSerializer(ItemSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image', 'category_id']
+        fields = ['id', 'subject', 'image',  'category_id', 'lecturer', 'name', 'description', 'price', 'level', 'duration', 'created_at']
+
+    def get_extra_kwargs(self):
+        extra_kwargs = super().get_extra_kwargs()
+        request = self.context.get('request')
+
+        if request and request.method in ['PUT', 'PATCH']:
+            extra_kwargs['subject'] = {'required': False}
+            extra_kwargs['image'] = {'required': False}
+
+        return extra_kwargs
+
+class ChapterSerializer(BaseSerializer):
+    class Meta:
+        model = Chapter
+        fields = ['id', 'course', 'name', 'description', 'is_published', 'active', 'created_at']
+
+
+class LessonSerializer(BaseSerializer):
+    class Meta:
+        model = Lesson
+        fields = ['id', 'chapter', 'name', 'description', 'type', 'video_url', 'duration', 'is_published', 'active', 'created_at']
 
 
 class UserRegistrationSerializer(BaseSerializer):

@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import hmac, hashlib
-from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment
+from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson
 from courses import serializers, paginators
-from .perms import IsAdmin, IsStudent, IsTeacher
+from .perms import IsAdmin, IsStudent, IsTeacher, IsTeacherOrAdmin
 from .services.momo import create_momo_payment, update_status_user_course
 
 
@@ -14,40 +14,49 @@ class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
     serializer_class = serializers.CategorySerializer
 
+class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = User.objects.filter(userRole__name="Teacher")
+    serializer_class = serializers.TeacherSerializer
 
-class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
+class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.filter(active=True)
     serializer_class = serializers.CourseSerializer
     pagination_class = paginators.CoursePagination
-    permission_classes = [permissions.IsAuthenticated]
 
-    def create(self, request):
-        print("User:", request.user)
-        serializer = serializers.CourseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(lecturer=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_permissions(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            return [IsTeacherOrAdmin()]
+        return [permissions.IsAuthenticated()]
 
-    def partial_update(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        serializer = serializers.CourseSerializer(course, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        serializer.save(lecturer=self.request.user)
 
-    def destroy(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        course.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        request = self.request
 
+        lecturer_id = request.query_params.get('lecturer')
+        category_id = request.query_params.get('category')
+        min_price = request.query_params.get('min_price')
+        max_price = request.query_params.get('max_price')
+        level = request.query_params.get('level')
+
+        if lecturer_id:
+            queryset = queryset.filter(lecturer_id=lecturer_id)
+
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+
+        if level:
+            queryset = queryset.filter(level=level)
+
+        return queryset
     @action(methods=['get'], detail=True, url_path='forum')
     def get_forum(self, request, pk=None):
         course = self.get_object()
@@ -57,6 +66,25 @@ class CourseViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
 
+class ChapterViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ChapterSerializer
+    pagination_class = paginators.ChapterPagination
+    queryset = Chapter.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            return [IsTeacherOrAdmin()]
+        return [permissions.IsAuthenticated()]
+
+class LessonViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.LessonSerializer
+    pagination_class = paginators.LessonPagination
+    queryset = Lesson.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            return [IsTeacherOrAdmin()]
+        return [permissions.IsAuthenticated()]
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -75,11 +103,17 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Vui lòng sử dụng /users/register-student/ hoặc /users/register-teacher/ để đăng ký."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
     # Đăng ký học viên
     @action(methods=['post'], detail=False, url_path='register-student')
     def register_student(self, request):
         data = request.data.copy()
-        student_role = get_object_or_404(Role, pk=1)
+        student_role = get_object_or_404(Role, name = "Student")
         data['userRole'] = student_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
@@ -96,30 +130,13 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     @action(methods=['post'], detail=False, url_path='register-teacher')
     def register_teacher(self, request):
         data = request.data.copy()
-        teacher_role = get_object_or_404(Role, pk=2)
-        print(teacher_role)
+        teacher_role = get_object_or_404(Role, name = "Teacher")
         data['userRole'] = teacher_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
             return Response({
                 'message': 'Đăng ký giảng viên thành công!',
-                'user': serializers.UserSerializer(user).data,
-                'note': 'Vui lòng sử dụng endpoint /o/token/ để lấy access token sau khi đăng ký'
-            }, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(methods=['post'], detail=False, url_path='register-admin')
-    def register_teacher(self, request):
-        data = request.data.copy()
-        admin_role = get_object_or_404(Role, pk=3)
-        data['userRole'] = admin_role.pk
-        serializer = self.get_serializer(data=data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                'message': 'Đăng ký admin thành công!',
                 'user': serializers.UserSerializer(user).data,
                 'note': 'Vui lòng sử dụng endpoint /o/token/ để lấy access token sau khi đăng ký'
             }, status=status.HTTP_201_CREATED)
