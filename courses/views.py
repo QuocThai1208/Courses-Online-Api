@@ -114,7 +114,6 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     def register_teacher(self, request):
         data = request.data.copy()
         admin_role = get_object_or_404(Role, pk=3)
-        print(teacher_role)
         data['userRole'] = admin_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
