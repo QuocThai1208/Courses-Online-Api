@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -27,11 +26,24 @@ jobs:
             source ~/.nvm/nvm.sh
             cd ~/course-be
             cd ~/Courses-Online-Api
+
+            # Dừng tiến trình đang chiếm port 8080
             fuser -k 8080/tcp || true
+
+            # Cập nhật code
             git fetch --all
             git reset --hard origin/main
+
+            # Kích hoạt môi trường ảo
             source venv/bin/activate
+
+            # Cài đặt lại dependencies
+            pip install --upgrade pip
             pip install -r requirements.txt
+
+            # Apply database migrations
             python manage.py makemigrations
             python manage.py migrate
-            python manage.py runserver 160.25.81.159:8080
+
+            # Chạy lại server ở background
+            nohup python manage.py runserver 0.0.0.0:8080 > server.log 2>&1 &
