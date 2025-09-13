@@ -108,12 +108,20 @@ class UserUpdateSerializer(BaseSerializer):
 
 class UserSerializer(BaseSerializer):
     avatar = serializers.SerializerMethodField()
+    userRole = serializers.SerializerMethodField(read_only=True)
+    date_joined = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'avatar', 'phone', 'date_joined', 'userRole')
+                  'avatar', 'phone', 'date_joined', 'userRole', 'address')
         read_only_fields = ('id', 'date_joined')
+
+    def get_userRole(self, obj):
+        return obj.userRole.name
+
+    def get_date_joined(self, obj):
+        return  obj.date_joined.strftime("%d-%m-%Y")
 
     def get_avatar(self, obj):
         if obj.avatar:
