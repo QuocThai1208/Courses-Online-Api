@@ -52,7 +52,7 @@ class ItemSerializer(serializers.ModelSerializer):
 class CourseSerializer(ItemSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image',  'category_id', 'lecturer', 'name', 'description', 'price', 'level', 'duration', 'created_at']
+        fields = ['id', 'subject', 'image',  'category', 'lecturer', 'name', 'description', 'price', 'level', 'duration', 'created_at']
 
     def get_extra_kwargs(self):
         extra_kwargs = super().get_extra_kwargs()
