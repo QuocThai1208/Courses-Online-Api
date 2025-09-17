@@ -1,6 +1,5 @@
 import json
 import uuid
-from urllib.parse import quote
 
 import requests
 import hmac
@@ -43,8 +42,8 @@ def create_momo_payment(amount, extraData):
     )
 
     #tạo chữ ký số
-    h = hmac.new(bytes(secretKey, 'utf-8'),
-                 bytes(rawSignature, 'utf-8'),
+    h = hmac.new(bytes(secretKey, 'ascii'),
+                 bytes(rawSignature, 'ascii'),
                  hashlib.sha256)
     signature = h.hexdigest()
 
