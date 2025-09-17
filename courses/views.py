@@ -14,9 +14,11 @@ class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
     serializer_class = serializers.CategorySerializer
 
+
 class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = User.objects.filter(userRole__name="Teacher")
     serializer_class = serializers.TeacherSerializer
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.filter(active=True)
@@ -57,6 +59,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(level=level)
 
         return queryset
+
     @action(methods=['get'], detail=True, url_path='forum')
     def get_forum(self, request, pk=None):
         course = self.get_object()
@@ -65,6 +68,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         except Forum.DoesNotExist:
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
+
 
 class ChapterViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ChapterSerializer
@@ -76,6 +80,7 @@ class ChapterViewSet(viewsets.ModelViewSet):
             return [IsTeacherOrAdmin()]
         return [permissions.IsAuthenticated()]
 
+
 class LessonViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.LessonSerializer
     pagination_class = paginators.LessonPagination
@@ -85,6 +90,7 @@ class LessonViewSet(viewsets.ModelViewSet):
         if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
             return [IsTeacherOrAdmin()]
         return [permissions.IsAuthenticated()]
+
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
@@ -113,7 +119,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     @action(methods=['post'], detail=False, url_path='register-student')
     def register_student(self, request):
         data = request.data.copy()
-        student_role = get_object_or_404(Role, name = "Student")
+        student_role = get_object_or_404(Role, name="Student")
         data['userRole'] = student_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
@@ -130,7 +136,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     @action(methods=['post'], detail=False, url_path='register-teacher')
     def register_teacher(self, request):
         data = request.data.copy()
-        teacher_role = get_object_or_404(Role, name = "Teacher")
+        teacher_role = get_object_or_404(Role, name="Teacher")
         data['userRole'] = teacher_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
@@ -182,6 +188,7 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
         data = serializer.data
         data['payUrl'] = pay_url
         return Response(data, status=status.HTTP_201_CREATED)
+
 
 class MomoIPNViewSet(APIView):
     def post(self, request, *args, **kwargs):
@@ -252,4 +259,3 @@ class CommentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         except Comment.DoesNotExist:
             return Response('Comment not found relies', status=status.HTTP_200_OK)
         return Response(serializers.CommentSerializer(relies, many=True).data, status=status.HTTP_200_OK)
-
