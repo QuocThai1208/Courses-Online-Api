@@ -209,15 +209,8 @@ class MomoIPNViewSet(APIView):
             f"&transId={data['transId']}"
         )
 
-        # # tạo chữ ký số
-        # signature = hmac.new(
-        #     'K951B6PE1waDMi640xX08PD3vg6EkVlz'.encode("utf-8"),
-        #     raw_signature.encode("utf-8"),
-        #     hashlib.sha256
-        # ).hexdigest()
-
-        signature = hmac.new(bytes('K951B6PE1waDMi640xX08PD3vg6EkVlz', 'ascii'),
-                     bytes(raw_signature, 'ascii'),
+        signature = hmac.new(bytes('K951B6PE1waDMi640xX08PD3vg6EkVlz', 'utf-8'),
+                     bytes(raw_signature, 'utf-8'),
                      hashlib.sha256).hexdigest()
 
         # xác thực chữ
