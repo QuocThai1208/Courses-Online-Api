@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import json
 import uuid
+from urllib.parse import quote
+
 import requests
 import hmac
 import hashlib
@@ -23,6 +23,7 @@ requestType = "captureWallet"
 
 def create_momo_payment(amount, extraData, course_name):
     orderInfo = "Thanh toán khóa học " + course_name
+    orderInfo_encoded = quote(orderInfo)
     orderId = str(extraData)
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
@@ -35,7 +36,7 @@ def create_momo_payment(amount, extraData, course_name):
             "&extraData=" + extraData +
             "&ipnUrl=" + ipnUrl +
             "&orderId=" + orderId +
-            "&orderInfo=" + orderInfo +
+            "&orderInfo=" + orderInfo_encoded +
             "&partnerCode=" + partnerCode +
             "&redirectUrl=" + redirectUrl +
             "&requestId=" + requestId +
@@ -43,8 +44,8 @@ def create_momo_payment(amount, extraData, course_name):
     )
 
     #tạo chữ ký số
-    h = hmac.new(bytes(secretKey, 'utf-8'),
-                 bytes(rawSignature, 'utf-8'),
+    h = hmac.new(bytes(secretKey, 'ascii'),
+                 bytes(rawSignature, 'ascii'),
                  hashlib.sha256)
     signature = h.hexdigest()
 
