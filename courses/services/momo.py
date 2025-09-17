@@ -1,17 +1,18 @@
 import json
 import uuid
+from dis import code_info
+
 import requests
 import hmac
 import hashlib
 
-from courses.models import UserCourse, CourseStatus
+from courses.models import UserCourse, CourseStatus, Course
 
 # parameters send to MoMo get get payUrl
 endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
 partnerCode = "MOMO"
 accessKey = "F8BBA842ECF85"
 secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
-orderInfo = "pay with MoMo"
 # Sau khi thanh toán momo sẽ redirect về url này
 redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"
 # url thồng báo trạng thái thanh toán
@@ -21,7 +22,10 @@ requestType = "captureWallet"
 
 
 def create_momo_payment(amount, extraData):
-    orderId = str(uuid.uuid4())
+    course = Course.objects.get(id=extraData)
+    course_name = course.name
+    orderInfo = "Thanh toán khóa học " + course_name
+    orderId = str(extraData)
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
     extraData = str(extraData) if extraData else ""
