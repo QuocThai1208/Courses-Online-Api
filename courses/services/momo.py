@@ -21,9 +21,7 @@ ipnUrl = "http://127.0.0.1:8000/payment/momo/ipn/"
 requestType = "captureWallet"
 
 
-def create_momo_payment(amount, extraData):
-    course = Course.objects.get(id=extraData)
-    course_name = course.name
+def create_momo_payment(amount, extraData, course_name):
     orderInfo = "Thanh toán khóa học " + course_name
     orderId = str(extraData)
     requestId = str(uuid.uuid4())

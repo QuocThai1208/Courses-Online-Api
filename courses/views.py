@@ -183,7 +183,7 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
         serializer.is_valid(raise_exception=True)
 
         user_course = serializer.save()
-        pay_url = create_momo_payment(user_course.course.price, user_course.id)
+        pay_url = create_momo_payment(user_course.course.price, user_course.id, user_course.course.name)
 
         data = serializer.data
         data['payUrl'] = pay_url
