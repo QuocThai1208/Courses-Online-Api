@@ -36,8 +36,8 @@ def create_momo_payment(amount, extraData, course_name):
             "&amount=" + amount +
             "&extraData=" + extraData +
             "&ipnUrl=" + ipnUrl +
-            "&orderId=" + orderInfo_encoded +
-            "&orderInfo=" + orderInfo +
+            "&orderId=" + orderId +
+            "&orderInfo=" + orderInfo_encoded +
             "&partnerCode=" + partnerCode +
             "&redirectUrl=" + redirectUrl +
             "&requestId=" + requestId +
