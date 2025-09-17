@@ -22,7 +22,7 @@ requestType = "captureWallet"
 
 
 def create_momo_payment(amount, extraData):
-    orderId = str(extraData)
+    orderId = str(uuid.uuid4())
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
     extraData = str(extraData) if extraData else ""
