@@ -72,7 +72,7 @@ def create_momo_payment(amount, extraData):
 
 
 def update_status_user_course(id, success):
-    user_course = UserCourse.objects.select_for_update().get(id=id)
+    user_course = UserCourse.objects.get(id=id)
     if success:
         user_course.status = CourseStatus.IN_PROGRESS
     else:
