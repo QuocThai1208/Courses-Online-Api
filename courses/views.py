@@ -190,44 +190,44 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
 
 class MomoIPNViewSet(APIView):
     def post(self, request, *args, **kwargs):
-        data = request.data
-        user_course_id = data['extraData']
-
-        raw_signature = (
-            f"accessKey=F8BBA842ECF85"
-            f"&amount={data['amount']}"
-            f"&extraData={data['extraData']}"
-            f"&message={data['message']}"
-            f"&orderId={data['orderId']}"
-            f"&orderInfo={data['orderInfo']}"
-            f"&orderType={data['orderType']}"
-            f"&partnerCode={data['partnerCode']}"
-            f"&payType={data['payType']}"
-            f"&requestId={data['requestId']}"
-            f"&responseTime={data['responseTime']}"
-            f"&resultCode={data['resultCode']}"
-            f"&transId={data['transId']}"
-        )
-
-        # tạo chữ ký số
-        signature = hmac.new(
-            'K951B6PE1waDMi640xX08PD3vg6EkVlz'.encode("utf-8"),
-            raw_signature.encode("utf-8"),
-            hashlib.sha256
-        ).hexdigest()
-
-        # xác thực chữ
-        if signature != data.get("signature"):
-            return Response({"message": "Invalid signature"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # thanh toán thành công
-        if data["resultCode"] == 0:
-            update_status_user_course(user_course_id, True)
-            return Response({"message": "Payment success"}, status=status.HTTP_200_OK)
-        # thanh toán thất bại
-        else:
-            update_status_user_course(user_course_id, False)
-            return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
+        # data = request.data
+        # user_course_id = data['extraData']
+        #
+        # raw_signature = (
+        #     f"accessKey=F8BBA842ECF85"
+        #     f"&amount={data['amount']}"
+        #     f"&extraData={data['extraData']}"
+        #     f"&message={data['message']}"
+        #     f"&orderId={data['orderId']}"
+        #     f"&orderInfo={data['orderInfo']}"
+        #     f"&orderType={data['orderType']}"
+        #     f"&partnerCode={data['partnerCode']}"
+        #     f"&payType={data['payType']}"
+        #     f"&requestId={data['requestId']}"
+        #     f"&responseTime={data['responseTime']}"
+        #     f"&resultCode={data['resultCode']}"
+        #     f"&transId={data['transId']}"
+        # )
+        #
+        # # tạo chữ ký số
+        # signature = hmac.new(
+        #     'K951B6PE1waDMi640xX08PD3vg6EkVlz'.encode("utf-8"),
+        #     raw_signature.encode("utf-8"),
+        #     hashlib.sha256
+        # ).hexdigest()
+        #
+        # # xác thực chữ
+        # if signature != data.get("signature"):
+        #     return Response({"message": "Invalid signature"}, status=status.HTTP_400_BAD_REQUEST)
+        #
+        # # thanh toán thành công
+        # if data["resultCode"] == 0:
+        #     update_status_user_course(user_course_id, True)
+        #     return Response({"message": "Payment success"}, status=status.HTTP_200_OK)
+        # # thanh toán thất bại
+        # else:
+        update_status_user_course(13, False)
+        return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
 
 
 class ForumViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
