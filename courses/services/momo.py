@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import json
 import uuid
-from dis import code_info
-
 import requests
 import hmac
 import hashlib
@@ -43,8 +43,8 @@ def create_momo_payment(amount, extraData, course_name):
     )
 
     #tạo chữ ký số
-    h = hmac.new(bytes(secretKey, 'ascii'),
-                 bytes(rawSignature, 'ascii'),
+    h = hmac.new(bytes(secretKey, 'utf-8'),
+                 bytes(rawSignature, 'utf-8'),
                  hashlib.sha256)
     signature = h.hexdigest()
 
