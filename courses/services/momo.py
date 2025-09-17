@@ -1,5 +1,7 @@
 import json
 import uuid
+from urllib.parse import quote
+
 import requests
 import hmac
 import hashlib
@@ -11,7 +13,7 @@ endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
 partnerCode = "MOMO"
 accessKey = "F8BBA842ECF85"
 secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
-orderInfo = "pay with MoMo"
+# orderInfo = "pay with MoMo"
 # Sau khi thanh toán momo sẽ redirect về url này
 redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"
 # url thồng báo trạng thái thanh toán
@@ -21,6 +23,8 @@ requestType = "captureWallet"
 
 
 def create_momo_payment(amount, extraData, course_name):
+    orderInfo = f"Thanh toán khóa học {course_name}"  # tiếng Việt gốc
+    orderInfo_encoded = quote(orderInfo)
     orderId = str(extraData)
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
@@ -41,8 +45,8 @@ def create_momo_payment(amount, extraData, course_name):
     )
 
     #tạo chữ ký số
-    h = hmac.new(bytes(secretKey, 'ascii'),
-                 bytes(rawSignature, 'ascii'),
+    h = hmac.new(bytes(secretKey, 'utf-8'),
+                 bytes(rawSignature, 'utf-8'),
                  hashlib.sha256)
     signature = h.hexdigest()
 
@@ -53,7 +57,7 @@ def create_momo_payment(amount, extraData, course_name):
         'requestId': requestId,
         'amount': amount,
         'orderId': orderId,
-        'orderInfo': "Thanh toán khóa học" + course_name,
+        'orderInfo': orderInfo,
         'redirectUrl': redirectUrl,
         'ipnUrl': ipnUrl,
         'lang': "vi",
