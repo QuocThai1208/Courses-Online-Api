@@ -160,11 +160,11 @@ class UserSerializer(BaseSerializer):
 
 class UserCourseSerializer(BaseSerializer):
     user = serializers.SerializerMethodField(read_only=True)
-    course_subject = serializers.CharField(source="course.subject", read_only=True)
+    course_obj = CourseSerializer(read_only=True)
 
     class Meta:
         model = UserCourse
-        fields = ['id', 'user', 'course', 'course_subject', 'status']
+        fields = ['id', 'user', 'course', 'course_obj', 'status']
 
     def get_user(self, obj):
         return obj.user.username
