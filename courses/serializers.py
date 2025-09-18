@@ -55,11 +55,11 @@ class CourseSerializer(ItemSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image', 'category', 'lecturer', 'name', 'description', 'price', 'level', 'duration',
+        fields = ['id', 'subject', 'image', 'category', 'lecturer', 'lecturer_name', 'name', 'description', 'price', 'level', 'duration',
                   'created_at']
 
     def get_lecturer_name(self, obj):
-        return f"{obj.lecturer.last_name}+ ""  +{obj.lecturer.last_name}"
+        return obj.lecturer.last_name + " " + obj.lecturer.first_name
 
     def get_extra_kwargs(self):
         extra_kwargs = super().get_extra_kwargs()
