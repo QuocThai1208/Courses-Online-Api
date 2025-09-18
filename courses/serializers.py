@@ -160,7 +160,7 @@ class UserSerializer(BaseSerializer):
 
 class UserCourseSerializer(BaseSerializer):
     user = serializers.SerializerMethodField(read_only=True)
-    course_obj = CourseSerializer(read_only=True)
+    course_obj = CourseSerializer(source='course', read_only=True)
 
     class Meta:
         model = UserCourse
