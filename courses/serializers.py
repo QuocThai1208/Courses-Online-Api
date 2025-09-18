@@ -171,13 +171,17 @@ class UserCourseSerializer(BaseSerializer):
     user = serializers.SerializerMethodField(read_only=True)
     course_obj = CourseSerializer(source='course', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    created_at = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = UserCourse
-        fields = ['id', 'user', 'course', 'course_obj', 'status', 'status_display']
+        fields = ['id', 'user', 'course', 'course_obj', 'status', 'status_display', 'created_at']
 
     def get_user(self, obj):
         return obj.user.username
+
+    def get_created_at(self, obj):
+        return obj.created_at.strftime("%d-%m-%Y")
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
