@@ -170,12 +170,10 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
 
     def get_queryset(self):
         user = self.request.user
-        if IsStudent().has_permission(self.request, self):
-            return UserCourse.objects.filter(user=user)
-        if IsTeacher().has_permission(self.request, self):
-            return UserCourse.objects.filter(course__lecturer=user)
         if IsAdmin().has_permission(self.request, self):
             return UserCourse.objects.all()
+        return UserCourse.objects.filter(user=user)
+
 
     @action(methods=['post'], detail=False, url_path='create', permission_classes=[IsStudent])
     def create_user_course(self, request):
