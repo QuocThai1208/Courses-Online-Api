@@ -28,7 +28,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
             return [IsTeacherOrAdmin()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     def perform_create(self, serializer):
         serializer.save(lecturer=self.request.user)
