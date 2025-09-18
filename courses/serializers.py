@@ -52,14 +52,22 @@ class ItemSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(ItemSerializer):
     lecturer_name = serializers.SerializerMethodField(read_only=True)
+    category_name = serializers.SerializerMethodField(read_only=True)
+    total_student = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image', 'category', 'lecturer', 'lecturer_name', 'name', 'description', 'price', 'level', 'duration',
+        fields = ['id', 'subject', 'image', 'category', 'category_name', 'total_student', 'lecturer', 'lecturer_name', 'name', 'description', 'price', 'level', 'duration',
                   'created_at']
 
     def get_lecturer_name(self, obj):
         return obj.lecturer.last_name + " " + obj.lecturer.first_name
+
+    def get_total_student(self, obj):
+        return obj.user_course.count()
+
+    def get_category_name(self, obj):
+        return obj.category.name
 
     def get_extra_kwargs(self):
         extra_kwargs = super().get_extra_kwargs()
