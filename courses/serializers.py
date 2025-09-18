@@ -116,7 +116,7 @@ class UserUpdateSerializer(BaseSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'avatar', 'password', 'phone')
+        fields = ('first_name', 'last_name', 'username', 'email', 'avatar', 'password', 'phone')
 
     def update(self, instance, validated_data):
         validated_data = self.handle_image_upload(validated_data, 'avatar', 'avatars')
