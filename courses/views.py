@@ -173,7 +173,7 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
         if IsStudent().has_permission(self.request, self):
             return UserCourse.objects.filter(user=user)
         if IsTeacher().has_permission(self.request, self):
-            return UserCourse.objects.filter(course_lecturer=user)
+            return UserCourse.objects.filter(course__lecturer=user)
         if IsAdmin().has_permission(self.request, self):
             return UserCourse.objects.all()
 
