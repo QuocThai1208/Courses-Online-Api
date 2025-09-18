@@ -34,6 +34,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name']
 
+
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -51,12 +52,14 @@ class ItemSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(ItemSerializer):
     lecturer_name = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Course
-        fields = ['id', 'subject', 'image',  'category', 'lecturer', 'name', 'description', 'price', 'level', 'duration', 'created_at']
+        fields = ['id', 'subject', 'image', 'category', 'lecturer', 'name', 'description', 'price', 'level', 'duration',
+                  'created_at']
 
     def get_lecturer_name(self, obj):
-        return obj.lecturer.name
+        return f"{obj.lecturer.last_name}+ ""  +{obj.lecturer.last_name}"
 
     def get_extra_kwargs(self):
         extra_kwargs = super().get_extra_kwargs()
@@ -68,6 +71,7 @@ class CourseSerializer(ItemSerializer):
 
         return extra_kwargs
 
+
 class ChapterSerializer(BaseSerializer):
     class Meta:
         model = Chapter
@@ -77,7 +81,8 @@ class ChapterSerializer(BaseSerializer):
 class LessonSerializer(BaseSerializer):
     class Meta:
         model = Lesson
-        fields = ['id', 'chapter', 'name', 'description', 'type', 'video_url', 'duration', 'is_published', 'active', 'created_at']
+        fields = ['id', 'chapter', 'name', 'description', 'type', 'video_url', 'duration', 'is_published', 'active',
+                  'created_at']
 
 
 class UserRegistrationSerializer(BaseSerializer):
@@ -151,7 +156,7 @@ class UserSerializer(BaseSerializer):
         return obj.userRole.name
 
     def get_date_joined(self, obj):
-        return  obj.date_joined.strftime("%d-%m-%Y")
+        return obj.date_joined.strftime("%d-%m-%Y")
 
     def get_avatar(self, obj):
         if obj.avatar:
@@ -197,11 +202,10 @@ class ForumSerializer(serializers.ModelSerializer, UserNameMixin):
 
     def get_course_name(self, obj):
         return obj.course.name
-    
+
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-
 
 
 class CommentSerializer(serializers.ModelSerializer, UserNameMixin):
