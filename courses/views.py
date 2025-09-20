@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import viewsets, generics, status, parsers, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -68,6 +69,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         except Forum.DoesNotExist:
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='top')
+    def get_courses_top(self, request, pk=None):
+        top_courses = Course.objects.annotate(student_count=Count('user_course')).order_by('-student_count')[:3]
+        return Response(serializers.CourseSerializer(top_courses, many=True).data, status=status.HTTP_200_OK)
 
 
 class ChapterViewSet(viewsets.ModelViewSet):
