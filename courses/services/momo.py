@@ -16,8 +16,8 @@ orderInfo = "pay with MoMo"
 # Sau khi thanh toán momo sẽ redirect về url này
 redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"
 # url thồng báo trạng thái thanh toán
-ipnUrl = "https://fair-drum-smooth.ngrok-free.app/payment/momo/ipn/"
-# ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
+# ipnUrl = "https://9cf58300a6e7.ngrok-free.app/payment/momo/ipn/"
+ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
 
 requestType = "captureWallet"
 
@@ -71,10 +71,7 @@ def create_momo_payment(amount, extraData):
     return resp.get('payUrl')
 
 
-def update_status_user_course(id, success):
+def update_status_user_course(id, status):
     user_course = UserCourse.objects.get(id=id)
-    if success:
-        user_course.status = CourseStatus.IN_PROGRESS
-    else:
-        user_course.status = CourseStatus.PAYMENT_FAILED
+    user_course.status = status
     user_course.save()

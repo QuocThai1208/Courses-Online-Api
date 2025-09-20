@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import hmac, hashlib
-from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson
+from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson, CourseStatus
 from courses import serializers, paginators
 from .perms import IsAdmin, IsStudent, IsTeacher, IsTeacherOrAdmin
 from .services.momo import create_momo_payment, update_status_user_course
@@ -223,11 +223,11 @@ class MomoIPNViewSet(APIView):
 
         # thanh toán thành công
         if data["resultCode"] == 0:
-            update_status_user_course(user_course_id, True)
+            update_status_user_course(user_course_id, CourseStatus.IN_PROGRESS)
             return Response({"message": "Payment success"}, status=status.HTTP_200_OK)
         # thanh toán thất bại
         else:
-            update_status_user_course(user_course_id, False)
+            update_status_user_course(user_course_id, CourseStatus.PAYMENT_FAILED)
             return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
 
 
