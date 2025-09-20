@@ -31,6 +31,7 @@ class Role(BaseModel):
 
 class User(AbstractUser):
     avatar = CloudinaryField(null=True, blank=True)
+    address = models.CharField(max_length=100)
     phone = models.CharField(max_length=15, null=True, blank=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30)
