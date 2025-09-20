@@ -95,7 +95,7 @@ class LessonViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = serializers.UserSerializer
-    parser_classes = [parsers.MultiPartParser]
+    parser_classes = [parsers.JSONParser, parsers.MultiPartParser]
 
     def get_serializer_class(self):
         if self.action in ['register_student', 'register_teacher']:
