@@ -6,7 +6,7 @@ from django.db import models
 class CourseStatus(models.TextChoices):
     PENDING = 'PENDING', 'Đang chờ thanh toán'
     IN_PROGRESS = 'IN_PROGRESS', 'Đang học'
-    FAILED ='FAILED', 'Không đạt yêu cầu'
+    FAILED = 'FAILED', 'Không đạt yêu cầu'
     COMPLETE = 'COMPLETE', 'Hoàn thành'
     INACTIVE = 'INACTIVE', 'Bị khóa tài khoản'
     PAYMENT_FAILED = 'PAYMENT_FAILED', "Thanh toán thất bại"
