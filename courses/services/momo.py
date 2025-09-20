@@ -71,10 +71,7 @@ def create_momo_payment(amount, extraData):
     return resp.get('payUrl')
 
 
-def update_status_user_course(id, success):
+def update_status_user_course(id, status):
     user_course = UserCourse.objects.get(id=id)
-    if success:
-        user_course.status = CourseStatus.IN_PROGRESS
-    else:
-        user_course.status = CourseStatus.PAYMENT_FAILED
+    user_course.status = status
     user_course.save()
