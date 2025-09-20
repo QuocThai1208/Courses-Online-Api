@@ -16,7 +16,7 @@ orderInfo = "pay with MoMo"
 # Sau khi thanh toán momo sẽ redirect về url này
 redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"
 # url thồng báo trạng thái thanh toán
-ipnUrl = "https://fair-drum-smooth.ngrok-free.app/payment/momo/ipn/"
+ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
 # ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
 
 requestType = "captureWallet"
