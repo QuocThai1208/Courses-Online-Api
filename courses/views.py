@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import hmac, hashlib
-from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson
+from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson, CourseStatus
 from courses import serializers, paginators
 from .perms import IsAdmin, IsStudent, IsTeacher, IsTeacherOrAdmin
 from .services.momo import create_momo_payment, update_status_user_course
