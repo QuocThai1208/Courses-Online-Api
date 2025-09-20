@@ -31,10 +31,10 @@ class Role(BaseModel):
 
 class User(AbstractUser):
     avatar = CloudinaryField(null=True, blank=True)
-    address = models.CharField(max_length=100)
+    address = models.CharField(max_length=100, null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
     email = models.EmailField(unique=True)
-    introduce = models.CharField(max_length=100)
+    introduce = models.CharField(max_length=100, null=True, blank=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     userRole = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
