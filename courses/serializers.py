@@ -157,7 +157,7 @@ class UserSerializer(BaseSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'avatar', 'address', 'introduce', 'phone', 'date_joined', 'userRole')
+                  'avatar', 'address', 'introduce', 'phone', 'date_joined', 'userRole', 'is_active')
         read_only_fields = ('id', 'date_joined')
 
     def get_userRole(self, obj):
