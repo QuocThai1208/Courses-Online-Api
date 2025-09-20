@@ -100,7 +100,7 @@ class UserRegistrationSerializer(BaseSerializer):
     class Meta:
         model = User
         fields = ('username', 'password', 'confirm_password', 'email',
-                  'first_name', 'last_name', 'avatar', 'address', 'phone', 'userRole')
+                  'first_name', 'last_name', 'avatar', 'address', 'introduce', 'phone', 'userRole')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['confirm_password']:
@@ -133,7 +133,7 @@ class UserUpdateSerializer(BaseSerializer):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'username', 'email', 'avatar', 'address', 'password', 'phone')
+        fields = ('first_name', 'last_name', 'username', 'email', 'avatar', 'address', 'introduce', 'password', 'phone')
 
     def update(self, instance, validated_data):
         validated_data = self.handle_image_upload(validated_data, 'avatar', 'avatars')
