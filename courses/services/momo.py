@@ -22,7 +22,7 @@ ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
 requestType = "captureWallet"
 
 
-def create_momo_payment(user, amount, extraData):
+def create_momo_payment(user, amount, extraData, course_id):
     orderId = str(uuid.uuid4())
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
@@ -72,7 +72,7 @@ def create_momo_payment(user, amount, extraData):
     payment = Payment.objects.create(
         id=orderId,
         user=user,
-        course=extraData,
+        course=course_id,
         amount=amount,
     )
     if pay_url:
