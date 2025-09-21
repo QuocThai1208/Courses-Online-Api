@@ -85,6 +85,8 @@ class Course(BaseModel):
         default=Level.SO_CAP
     )
     duration = models.IntegerField(help_text="Duration in minutes", default=0)
+    learning_outcomes = models.TextField(default='', help_text="Learning outcomes in HTML format")
+    requirements = models.TextField(default='', help_text="Course requirements in HTML format")
 
     def __str__(self):
         return self.name
@@ -129,13 +131,61 @@ class Payment(BaseModel):
     status = models.CharField(max_length=50, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
 
 
+class LessonProgressStatus(models.TextChoices):
+    NOT_STARTED = 'NOT_STARTED', 'Chưa bắt đầu'
+    IN_PROGRESS = 'IN_PROGRESS', 'Đang học'
+    COMPLETED = 'COMPLETED', 'Đã hoàn thành'
+    PAUSED = 'PAUSED', 'Tạm dừng'
+
+
 class LessonProgress(BaseModel):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(max_length=50)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='progress')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_progress')
+    status = models.CharField(max_length=20, choices=LessonProgressStatus.choices, default=LessonProgressStatus.NOT_STARTED)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    watch_time = models.IntegerField(default=0)
+    watch_time = models.IntegerField(default=0, help_text="Watch time in seconds")
+    last_watched_at = models.DateTimeField(null=True, blank=True)
+    completion_percentage = models.FloatField(default=0.0, help_text="Completion percentage (0-100)")
+
+    class Meta:
+        unique_together = ['lesson', 'user']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.lesson.name} - {self.status}"
+
+
+class CourseProgress(BaseModel):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='progress')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='course_progress')
+    total_lessons = models.IntegerField(default=0)
+    completed_lessons = models.IntegerField(default=0)
+    total_watch_time = models.IntegerField(default=0, help_text="Total watch time in seconds")
+    completion_percentage = models.FloatField(default=0.0, help_text="Course completion percentage (0-100)")
+    last_accessed_at = models.DateTimeField(null=True, blank=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['course', 'user']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course.name} - {self.completion_percentage}%"
+
+    def update_progress(self):
+        """Update course progress based on lesson progress"""
+        lesson_progresses = LessonProgress.objects.filter(
+            user=self.user,
+            lesson__chapter__course=self.course
+        )
+        
+        self.total_lessons = lesson_progresses.count()
+        self.completed_lessons = lesson_progresses.filter(status=LessonProgressStatus.COMPLETED).count()
+        self.total_watch_time = sum(lp.watch_time for lp in lesson_progresses)
+        
+        if self.total_lessons > 0:
+            self.completion_percentage = (self.completed_lessons / self.total_lessons) * 100
+        
+        self.save()
 
 
 class Forum(BaseModel):
@@ -149,11 +199,32 @@ class Forum(BaseModel):
         return self.name
 
 
+class Topic(BaseModel):
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="topics")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="topics")
+    title = models.CharField(max_length=255, default='')
+    content = models.TextField(default='')
+    is_pinned = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    view_count = models.IntegerField(default=0)
+    last_activity = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-last_activity']
+
+    def __str__(self):
+        return self.title
+
+
 class Comment(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments")
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     content = models.TextField()
+
+    class Meta:
+        ordering = ['created_at']
 
     def __str__(self):
         return self.user.username
