@@ -364,13 +364,22 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 class LessonProgressSerializer(serializers.ModelSerializer):
     lesson_name = serializers.CharField(source='lesson.name', read_only=True)
     lesson_duration = serializers.IntegerField(source='lesson.duration', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    status_display = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = LessonProgress
         fields = ['id', 'lesson', 'lesson_name', 'lesson_duration', 'status', 'status_display', 
                  'started_at', 'completed_at', 'watch_time', 'last_watched_at', 'completion_percentage']
         read_only_fields = ['id', 'started_at', 'completed_at', 'last_watched_at']
+    
+    def get_status_display(self, obj):
+        """Get human readable status"""
+        status_map = {
+            'NOT_STARTED': 'Chưa bắt đầu',
+            'IN_PROGRESS': 'Đang học',
+            'COMPLETED': 'Đã hoàn thành'
+        }
+        return status_map.get(obj.status, obj.status)
 
 
 class CourseProgressSerializer(serializers.ModelSerializer):
@@ -426,3 +435,32 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserCourse
         fields = ['id', 'course', 'status', 'progress', 'created_at']
+
+    def get_progress(self, obj):
+        """
+        Lấy CourseProgress từ prefetched data
+        """
+        # Sử dụng prefetched data
+        if hasattr(obj.course, 'user_course_progress'):
+            progress_list = obj.course.user_course_progress
+            if progress_list:
+                # Lấy progress đầu tiên (chỉ có 1 vì filter theo user)
+                progress = progress_list[0]
+                return CourseProgressSerializer(progress).data
+        
+        # Fallback: Tạo progress mới nếu chưa có
+        try:
+            progress = CourseProgress.objects.get(
+                user=obj.user,
+                course=obj.course
+            )
+            return CourseProgressSerializer(progress).data
+        except CourseProgress.DoesNotExist:
+            # Tạo CourseProgress mới
+            progress = CourseProgress.objects.create(
+                user=obj.user,
+                course=obj.course
+            )
+            progress.update_progress()
+            return CourseProgressSerializer(progress).data
+

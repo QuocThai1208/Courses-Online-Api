@@ -7,12 +7,13 @@ from rest_framework.views import APIView
 import hmac, hashlib
 from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson, CourseStatus, \
     Payment, PaymentStatus, LessonProgress, CourseProgress, LessonProgressStatus, Topic
-from courses import serializers, paginators
 from .perms import IsAdmin, IsStudent, IsTeacher, IsTeacherOrAdmin
 from .services.momo import create_momo_payment, update_status_user_course
 from rest_framework.exceptions import PermissionDenied
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.db.models import Prefetch
+from courses import serializers, paginators
 
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
@@ -442,9 +443,20 @@ class LessonProgressViewSet(viewsets.ModelViewSet):
     @action(methods=['post'], detail=False, url_path='update-progress')
     def update_lesson_progress(self, request):
         """Update lesson progress for a specific lesson"""
-        lesson_id = request.data.get('lesson_id')
-        watch_time = request.data.get('watch_time', 0)
-        completion_percentage = request.data.get('completion_percentage', 0)
+        # Handle both DRF request and Django request
+        if hasattr(request, 'data'):
+            lesson_id = request.data.get('lesson_id')
+            watch_time = request.data.get('watch_time', 0)
+            completion_percentage = request.data.get('completion_percentage', 0)
+        else:
+            import json
+            try:
+                data = json.loads(request.body)
+                lesson_id = data.get('lesson_id')
+                watch_time = data.get('watch_time', 0)
+                completion_percentage = data.get('completion_percentage', 0)
+            except (json.JSONDecodeError, AttributeError):
+                return Response({"error": "Invalid JSON data"}, status=status.HTTP_400_BAD_REQUEST)
         
         if not lesson_id:
             return Response({"error": "lesson_id is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -470,17 +482,17 @@ class LessonProgressViewSet(viewsets.ModelViewSet):
             lesson=lesson
         )
         
-        # Determine status based on completion percentage
+        # Determine progress status based on completion percentage
         if completion_percentage >= 90:
-            status = LessonProgressStatus.COMPLETED
+            progress_status = LessonProgressStatus.COMPLETED
         elif completion_percentage > 0:
-            status = LessonProgressStatus.IN_PROGRESS
+            progress_status = LessonProgressStatus.IN_PROGRESS
         else:
-            status = LessonProgressStatus.NOT_STARTED
+            progress_status = LessonProgressStatus.NOT_STARTED
         
         # Update progress
         serializer = serializers.LessonProgressUpdateSerializer(lesson_progress, data={
-            'status': status,
+            'status': progress_status,
             'watch_time': watch_time,
             'completion_percentage': completion_percentage
         })
@@ -567,7 +579,20 @@ class EnrolledCoursesViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
+        
+        # Tạo Prefetch cho CourseProgress của user hiện tại
+        course_progress_prefetch = Prefetch(
+            'course__progress',  # Quan hệ từ UserCourse -> Course -> CourseProgress
+            queryset=CourseProgress.objects.filter(user=user),
+            to_attr='user_course_progress'
+        )
+        
         return UserCourse.objects.filter(
-            user=self.request.user,
+            user=user,
             status=CourseStatus.IN_PROGRESS
-        ).select_related('course').prefetch_related('course__progress')
+        ).select_related('course', 'course__lecturer', 'course__category') \
+         .prefetch_related(
+             course_progress_prefetch,
+             'course__chapters__lessons__documents'
+         )
