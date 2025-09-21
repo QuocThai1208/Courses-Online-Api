@@ -5,7 +5,7 @@ import requests
 import hmac
 import hashlib
 
-from courses.models import UserCourse, CourseStatus, Course
+from courses.models import UserCourse, CourseStatus, Course, Payment
 
 # parameters send to MoMo get get payUrl
 endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
@@ -22,7 +22,7 @@ ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
 requestType = "captureWallet"
 
 
-def create_momo_payment(amount, extraData):
+def create_momo_payment(user, amount, extraData):
     orderId = str(uuid.uuid4())
     requestId = str(uuid.uuid4())
     amount = str(int(amount))
@@ -68,7 +68,16 @@ def create_momo_payment(amount, extraData):
                              headers={'Content-Type': 'application/json',
                                       'Content-Length': str(len(data))})
     resp = response.json()
-    return resp.get('payUrl')
+    pay_url = resp.get('payUrl')
+    payment = Payment.objects.create(
+        id=orderId,
+        user=user,
+        course=extraData,
+        amount=amount,
+    )
+    if pay_url:
+        payment.save()
+    return pay_url
 
 
 def update_status_user_course(id, status):

@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import hmac, hashlib
-from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson, CourseStatus
+from courses.models import Category, Course, User, Role, UserCourse, Forum, Comment, Chapter, Lesson, CourseStatus, \
+    Payment, PaymentStatus
 from courses import serializers, paginators
 from .perms import IsAdmin, IsStudent, IsTeacher, IsTeacherOrAdmin
 from .services.momo import create_momo_payment, update_status_user_course
@@ -183,11 +184,12 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
 
     @action(methods=['post'], detail=False, url_path='create', permission_classes=[IsStudent])
     def create_user_course(self, request):
+        user = request.user
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
         user_course = serializer.save()
-        pay_url = create_momo_payment(user_course.course.price, user_course.id)
+        pay_url = create_momo_payment(user, user_course.course.price, user_course.id)
 
         return Response({'payUrl': pay_url}, status=status.HTTP_201_CREATED)
 
@@ -196,6 +198,7 @@ class MomoIPNViewSet(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         user_course_id = data['extraData']
+        payment_id = data['orderId']
 
         raw_signature = (
             f"accessKey=F8BBA842ECF85"
@@ -220,14 +223,19 @@ class MomoIPNViewSet(APIView):
         # xác thực chữ
         if signature != data.get("signature"):
             return Response({"message": "Invalid signature"}, status=status.HTTP_400_BAD_REQUEST)
+        payment = Payment.objects.get(id=payment_id)
 
         # thanh toán thành công
         if data["resultCode"] == 0:
             update_status_user_course(user_course_id, CourseStatus.IN_PROGRESS)
+            payment.status = PaymentStatus.SUCCESS
+            payment.save()
             return Response({"message": "Payment success"}, status=status.HTTP_200_OK)
         # thanh toán thất bại
         else:
             update_status_user_course(user_course_id, CourseStatus.PAYMENT_FAILED)
+            payment.status = PaymentStatus.FAILED
+            payment.save()
             return Response({"message": "Payment failed"}, status=status.HTTP_200_OK)
 
 

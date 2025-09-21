@@ -12,6 +12,12 @@ class CourseStatus(models.TextChoices):
     PAYMENT_FAILED = 'PAYMENT_FAILED', "Thanh toán thất bại"
 
 
+class PaymentStatus(models.TextChoices):
+    PENDING = 'PENDING', 'Đang chờ thanh toán'
+    SUCCESS = 'SUCCESS', 'Thanh toán thành công'
+    FAILED = 'FAILED', 'Thanh toán thất bại'
+
+
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -115,11 +121,12 @@ class Document(BaseModel):
 
 
 class Payment(BaseModel):
+    id = models.CharField(primary_key=True,max_length=36,editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    method = models.CharField(max_length=50)
-    status = models.CharField(max_length=50)
+    method = models.CharField(max_length=50, default='Momo')
+    status = models.CharField(max_length=50, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
 
 
 class LessonProgress(BaseModel):
