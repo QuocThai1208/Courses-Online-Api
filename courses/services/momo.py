@@ -72,7 +72,7 @@ def create_momo_payment(user, amount, extraData, course_id):
     payment = Payment.objects.create(
         id=orderId,
         user=user,
-        course=course_id,
+        course_id=course_id,
         amount=amount,
     )
     if pay_url:
