@@ -28,8 +28,7 @@ jobs:
           script: |
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh
-            cd ~/quanlikhoahoc
-            cd ~/Courses-Online-Api
+            cd ~/quanlikhoahoc/Courses-Online-Api
 
             fuser -k 8080/tcp || true
 
