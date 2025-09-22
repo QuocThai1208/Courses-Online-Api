@@ -14,6 +14,10 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.db.models import Prefetch
 from courses import serializers, paginators
+from django.core.cache import cache
+from django.core.mail import send_mail
+import uuid
+import random
 
 class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
@@ -596,3 +600,59 @@ class EnrolledCoursesViewSet(viewsets.ReadOnlyModelViewSet):
              course_progress_prefetch,
              'course__chapters__lessons__documents'
          )
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=400)
+
+        otp = str(random.randint(100000, 999999))
+        cache.set(otp, email, timeout=180)
+
+        send_mail(
+            "Reset your password",
+            f"Your OTP code is: {otp}. It will expire in 3 minutes.",
+            "no-reply@example.com",
+            [email],
+        )
+
+        return Response({"message": "OTP sent to email"}, status=200)
+
+class VerifyOTPView(APIView):
+    def post(self, request):
+        otp = request.data.get("otp")
+        email = cache.get(otp)
+
+        if email is None:
+            return Response({"success": False, "message": "Invalid or expired OTP"}, status=400)
+
+        # ✅ Lưu trạng thái verify = True theo email
+        cache.set(f"verified:{email}", True, timeout=300)  # hết hạn sau 5 phút
+        cache.delete(otp)
+
+        return Response({"success": True, "message": "OTP verified. You can reset your password now."}, status=200)
+
+
+class ResetPasswordView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        new_password = request.data.get("password")
+
+        is_verified = cache.get(f"verified:{email}", False)
+
+        if not is_verified:
+            return Response({"success": False, "message": "OTP not verified or expired"}, status=400)
+
+        try:
+            user = User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+
+            # ✅ Sau khi reset thì xóa trạng thái verify
+            cache.delete(f"verified:{email}")
+
+            return Response({"success": True, "message": "Password reset successfully"}, status=200)
+
+        except User.DoesNotExist:
+            return Response({"success": False, "message": "User not found"}, status=404)

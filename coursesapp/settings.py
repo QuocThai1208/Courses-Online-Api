@@ -78,6 +78,13 @@ TEMPLATES = [
     },
 ]
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
 OAUTH2_PROVIDER = {'SCOPES': {'read': 'Read scope', 'write': 'Write scope', }}
 REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': (
     'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
@@ -104,7 +111,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'courseonlinedb',
         'USER': 'root',
-        'PASSWORD': '594362@Hnt',
+        'PASSWORD': 'Admin@123',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -120,6 +127,16 @@ cloudinary.config(
     api_secret='aEf9hn_PrTeOXTOOJCz6k8Ucf3U',
     secure=True
 )
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'qkhanh1632@gmail.com'
+EMAIL_HOST_PASSWORD = 'eeqm sumi hxgj egsn'
+DEFAULT_FROM_EMAIL = 'qkhanh1632@gmail.com'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
