@@ -105,7 +105,7 @@ DATABASES = {
         'NAME': 'courseonlinedb',
         'USER': 'root',
         'PASSWORD': '594362@Hnt',
-        'HOST': 'localhost',   # hoặc localhost
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }

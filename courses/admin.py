@@ -1,8 +1,8 @@
 from django.contrib import admin
 from .models import (
     Role, User, Permission, Category, Course, UserCourse,
-    Chapter, Lesson, Document, Payment, LessonProgress,
-    Forum, Comment
+    Chapter, Lesson, Document, Payment, LessonProgress, CourseProgress,
+    Forum, Comment, LessonProgressStatus, Topic
 )
 
 
@@ -76,9 +76,28 @@ class PaymentAdmin(admin.ModelAdmin):
 
 @admin.register(LessonProgress)
 class LessonProgressAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "lesson", "status", "watch_time", "started_at", "completed_at")
-    list_filter = ("status",)
+    list_display = ("id", "user", "lesson", "status", "completion_percentage", "watch_time", "started_at", "completed_at", "last_watched_at")
+    list_filter = ("status", "lesson__chapter__course")
     search_fields = ("user__username", "lesson__name")
+    readonly_fields = ("started_at", "completed_at", "last_watched_at")
+    ordering = ("-last_watched_at", "-created_at")
+
+
+@admin.register(CourseProgress)
+class CourseProgressAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "course", "completion_percentage", "completed_lessons", "total_lessons", "total_watch_time", "last_accessed_at", "enrolled_at")
+    list_filter = ("course", "enrolled_at")
+    search_fields = ("user__username", "course__name")
+    readonly_fields = ("total_lessons", "completed_lessons", "total_watch_time", "completion_percentage", "enrolled_at")
+    ordering = ("-last_accessed_at", "-enrolled_at")
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'course')
+
+
+# Note: LessonProgressStatus is a TextChoices enum, not a model
+# So we don't need to register it as an admin class
+# The choices are available in the LessonProgress admin form
 
 
 @admin.register(Forum)
@@ -88,8 +107,25 @@ class ForumAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
 
 
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "user", "forum", "is_pinned", "is_locked", "view_count", "last_activity", "created_at")
+    list_filter = ("forum", "is_pinned", "is_locked", "created_at")
+    search_fields = ("title", "user__username", "content")
+    readonly_fields = ("view_count", "last_activity", "created_at", "updated_at")
+    ordering = ("-is_pinned", "-last_activity")
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'forum')
+
+
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "forum", "parent", "content", "created_at")
-    list_filter = ("forum",)
+    list_display = ("id", "user", "forum", "topic", "parent", "content", "created_at")
+    list_filter = ("forum", "topic", "created_at")
     search_fields = ("user__username", "content")
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-created_at",)
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'forum', 'topic')
