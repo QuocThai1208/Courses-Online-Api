@@ -10,6 +10,10 @@ class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Category.objects.filter(active=True)
     serializer_class = serializers.CategorySerializer
 
+class TeacherViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = User.objects.filter(userRole__name="Teacher")
+    serializer_class = serializers.TeacherSerializer
+
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.filter(active=True)
     serializer_class = serializers.CourseSerializer
@@ -79,7 +83,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     @action(methods=['post'], detail=False, url_path='register-student')
     def register_student(self, request):
         data = request.data.copy()
-        student_role = get_object_or_404(Role, pk=1)
+        student_role = get_object_or_404(Role, name = "Student")
         data['userRole'] = student_role.pk
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
@@ -96,7 +100,7 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
     @action(methods=['post'], detail=False, url_path='register-teacher')
     def register_teacher(self, request):
         data = request.data.copy()
-        teacher_role = get_object_or_404(Role, pk=2)
+        teacher_role = get_object_or_404(Role, name = "Teacher")
         print(teacher_role)
         data['userRole'] = teacher_role.pk
         serializer = self.get_serializer(data=data)
