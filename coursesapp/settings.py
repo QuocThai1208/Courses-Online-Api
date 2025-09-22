@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'oauth2_provider.middleware.OAuth2TokenMiddleware', 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,7 +79,18 @@ TEMPLATES = [
     },
 ]
 
-OAUTH2_PROVIDER = {'SCOPES': {'read': 'Read scope', 'write': 'Write scope', }}
+OAUTH2_PROVIDER = {
+    'SCOPES': {
+        'read': 'Read scope', 
+        'write': 'Write scope',
+    },
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 3600 * 24 * 7,
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 600,
+    'ROTATE_REFRESH_TOKEN': True,
+}
+
+
 REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': (
     'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     'rest_framework.authentication.TokenAuthentication',
