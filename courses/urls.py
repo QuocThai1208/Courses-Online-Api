@@ -16,4 +16,8 @@ router.register('comments', views.CommentViewSet, basename='comments')
 urlpatterns = [
     path('', include(router.urls)),
     path('payment/momo/ipn/', views.MomoIPNViewSet.as_view(), name='momo-ipn'),
+    path('forget-password/', views.ForgotPasswordView.as_view(), name='forget-password'),
+    path('verify-otp/', views.VerifyOTPView.as_view(), name='verify-otp'),
+    path('reset-password/', views.ResetPasswordView.as_view(), name='reset-password'),
+
 ]

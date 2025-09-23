@@ -78,6 +78,13 @@ TEMPLATES = [
     },
 ]
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
 OAUTH2_PROVIDER = {'SCOPES': {'read': 'Read scope', 'write': 'Write scope', }}
 REST_FRAMEWORK = {'DEFAULT_AUTHENTICATION_CLASSES': (
     'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
@@ -105,7 +112,7 @@ DATABASES = {
         'NAME': 'courseonlinedb',
         'USER': 'root',
         'PASSWORD': '594362@Hnt',
-        'HOST': 'localhost',   # hoặc localhost
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }

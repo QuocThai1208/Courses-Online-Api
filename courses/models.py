@@ -121,12 +121,19 @@ class Document(BaseModel):
 
 
 class Payment(BaseModel):
-    id = models.CharField(primary_key=True,max_length=36,editable=False)
+    id = models.CharField(primary_key=True, max_length=36, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     method = models.CharField(max_length=50, default='Momo')
     status = models.CharField(max_length=50, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+
+
+class LessonProgressStatus(models.TextChoices):
+    NOT_STARTED = 'NOT_STARTED', 'Chưa bắt đầu'
+    IN_PROGRESS = 'IN_PROGRESS', 'Đang học'
+    COMPLETED = 'COMPLETED', 'Đã hoàn thành'
+    PAUSED = 'PAUSED', 'Tạm dừng'
 
 
 class LessonProgress(BaseModel):
@@ -138,6 +145,39 @@ class LessonProgress(BaseModel):
     watch_time = models.IntegerField(default=0)
 
 
+class CourseProgress(BaseModel):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='progress')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='course_progress')
+    total_lessons = models.IntegerField(default=0)
+    completed_lessons = models.IntegerField(default=0)
+    total_watch_time = models.IntegerField(default=0, help_text="Total watch time in seconds")
+    completion_percentage = models.FloatField(default=0.0, help_text="Course completion percentage (0-100)")
+    last_accessed_at = models.DateTimeField(null=True, blank=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['course', 'user']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.course.name} - {self.completion_percentage}%"
+
+    def update_progress(self):
+        """Update course progress based on lesson progress"""
+        lesson_progresses = LessonProgress.objects.filter(
+            user=self.user,
+            lesson__chapter__course=self.course
+        )
+
+        self.total_lessons = lesson_progresses.count()
+        self.completed_lessons = lesson_progresses.filter(status=LessonProgressStatus.COMPLETED).count()
+        self.total_watch_time = sum(lp.watch_time for lp in lesson_progresses)
+
+        if self.total_lessons > 0:
+            self.completion_percentage = (self.completed_lessons / self.total_lessons) * 100
+
+        self.save()
+
+
 class Forum(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name="forum", null=True, blank=True)
@@ -147,6 +187,23 @@ class Forum(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class Topic(BaseModel):
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="topics")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="topics")
+    title = models.CharField(max_length=255, default='')
+    content = models.TextField(default='')
+    is_pinned = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    view_count = models.IntegerField(default=0)
+    last_activity = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-last_activity']
+
+    def __str__(self):
+        return self.title
 
 
 class Comment(BaseModel):
