@@ -71,14 +71,14 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
-    def get_my_course(self, request, pk=None):
-        user = request.user
-        query = Course.objects.filter(lecturer=user)
+    # @action(methods=['get'], detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
+    # def get_my_course(self, request, pk=None):
+    #     user = request.user
+    #     query = Course.objects.filter(lecturer=user)
 
-        page = self.paginate_queryset(query)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+    #     page = self.paginate_queryset(query)
+    #     serializer = self.get_serializer(page, many=True)
+    #     return self.get_paginated_response(serializer.data)
 
     @action(methods=['get'], detail=False, url_path='top')
     def get_courses_top(self, request, pk=None):
