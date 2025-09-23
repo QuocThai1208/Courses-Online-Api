@@ -16,6 +16,9 @@ Hệ thống Backend cho nền tảng khóa học trực tuyến, xây dựng b�
 - Sử dụng Bearer Token cho các request cần xác thực
 - Phân quyền theo vai trò: Admin, Teacher, Student (custom permissions `IsAdmin`, `IsTeacher`, `IsStudent`, `IsTeacherOrAdmin`)
 
+## có tích hợp swagger để tiện cho việc theo dõi api
+-Sau khi chạy backend vào link: http://localhost:8080/swagger
+
 ## Các API chính (prefix theo router)
 - `GET /categories/`: Danh sách danh mục
 - `GET /teachers/`: Dan sách giảng viên
