@@ -1,6 +1,6 @@
 from django.db.models import Count
 from rest_framework import viewsets, generics, status, parsers, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -70,6 +70,15 @@ class CourseViewSet(viewsets.ModelViewSet):
         except Forum.DoesNotExist:
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
+
+    @action(methods='get', detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
+    def get_my_course(self, request, pk=None):
+        user = request.user
+        query = Course.objects.filter(lecturer=user)
+
+        page = self.paginate_queryset(query)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @action(methods=['get'], detail=False, url_path='top')
     def get_courses_top(self, request, pk=None):
@@ -181,7 +190,6 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
             return UserCourse.objects.all()
         return UserCourse.objects.filter(user=user)
 
-
     @action(methods=['post'], detail=False, url_path='create', permission_classes=[IsStudent])
     def create_user_course(self, request):
         user = request.user
@@ -217,8 +225,8 @@ class MomoIPNViewSet(APIView):
         )
 
         signature = hmac.new(bytes('K951B6PE1waDMi640xX08PD3vg6EkVlz', 'utf-8'),
-                     bytes(raw_signature, 'utf-8'),
-                     hashlib.sha256).hexdigest()
+                             bytes(raw_signature, 'utf-8'),
+                             hashlib.sha256).hexdigest()
 
         # xác thực chữ
         if signature != data.get("signature"):
