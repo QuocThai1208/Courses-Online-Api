@@ -1,6 +1,6 @@
 from django.db.models import Count
 from rest_framework import viewsets, generics, status, parsers, permissions
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -77,8 +77,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         query = Course.objects.filter(lecturer=user)
 
         page = self.paginate_queryset(query)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        if page is not None:  # <-- kiểm tra ở đây
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+            # Nếu không phân trang
+        serializer = self.get_serializer(query, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path='top')
     def get_courses_top(self, request, pk=None):
