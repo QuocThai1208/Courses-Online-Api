@@ -59,7 +59,7 @@ class CourseSerializer(ItemSerializer):
     class Meta:
         model = Course
         fields = ['id', 'subject', 'image', 'category', 'category_name', 'total_student', 'lecturer', 'lecturer_name',
-                  'name', 'description', 'price', 'level', 'duration',
+                  'name', 'description', 'video_url', 'price', 'level', 'duration',
                   'created_at']
 
     def get_lecturer_name(self, obj):
