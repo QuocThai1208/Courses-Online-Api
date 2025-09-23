@@ -71,7 +71,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
 
-    @action(methods='get', detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
+    @action(methods=['get'], detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
     def get_my_course(self, request, pk=None):
         user = request.user
         query = Course.objects.filter(lecturer=user)
