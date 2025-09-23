@@ -14,7 +14,7 @@ accessKey = "F8BBA842ECF85"
 secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
 orderInfo = "pay with MoMo"
 # Sau khi thanh toán momo sẽ redirect về url này
-redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"
+redirectUrl = "http://160.25.81.159:3000/my-courses/"
 # url thồng báo trạng thái thanh toán
 # ipnUrl = "https://9cf58300a6e7.ngrok-free.app/payment/momo/ipn/"
 ipnUrl = "http://160.25.81.159:8080/payment/momo/ipn/"
