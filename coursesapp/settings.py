@@ -111,8 +111,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'courseonlinedb',
         'USER': 'root',
-        # 'PASSWORD': '594362@Hnt',
-        'PASSWORD': '123456',
+        'PASSWORD': '594362@Hnt',
         'HOST': 'localhost',
         'PORT': '3306',
     }
