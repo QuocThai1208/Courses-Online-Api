@@ -55,23 +55,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(price__gte=min_price)
 
         if max_price:
-            queryset = queryset.filter(price__lte=max_price)
-
-        if level:
-            queryset = queryset.filter(level=level)
-
-        return queryset
-
-    @action(methods=['get'], detail=True, url_path='forum')
-    def get_forum(self, request, pk=None):
-        course = self.get_object()
-        try:
-            forum = course.forum
-        except Forum.DoesNotExist:
-            return Response({"detail": "Forum not found for this course"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializers.ForumSerializer(forum).data, status=status.HTTP_200_OK)
-
-    @action(methods='get', detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
+            queryset = queryset.filter(price__lte=max_pget], detail=False, url_path='my-course', permission_classes=[permissions.IsAuthenticated])
     def get_my_course(self, request, pk=None):
         user = request.user
         query = Course.objects.filter(lecturer=user)
