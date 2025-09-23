@@ -9,6 +9,7 @@ Hệ thống Backend cho nền tảng khóa học trực tuyến, xây dựng b�
 - Ghi danh khóa học, thanh toán MoMo IPN
 - Diễn đàn khóa học (Forum) với Topic, Comment, Reply
 - Theo dõi tiến độ học (Lesson Progress, Course Progress)
+- Chat real-time bằng firebase
 
 ## Xác thực & Phân quyền
 - Sử dụng OAuth2 cho authentication (Endpoint cấp token: `/o/token/`)
