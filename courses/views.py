@@ -230,6 +230,12 @@ class UserCourseViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retriev
 
         return Response({'payUrl': pay_url}, status=status.HTTP_201_CREATED)
 
+    @action(methods=['get'], detail=False, url_path='complete', permission_classes=[permissions.IsAuthenticated])
+    def get_courses_complete(self, request, pk=None):
+        user = request.user
+        course_complete = UserCourse.objects.filter(user=user, status=CourseStatus.COMPLETE).count()
+        return Response({'count_course_complete': course_complete})
+
 
 class MomoIPNViewSet(APIView):
     def post(self, request, *args, **kwargs):
