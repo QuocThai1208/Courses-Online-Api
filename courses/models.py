@@ -85,6 +85,8 @@ class Course(BaseModel):
         default=Level.SO_CAP
     )
     duration = models.IntegerField(help_text="Duration in minutes", default=0)
+    learning_outcomes = models.TextField(default='', help_text="Learning outcomes in HTML format")
+    requirements = models.TextField(default='', help_text="Course requirements in HTML format")
 
     def __str__(self):
         return self.name
@@ -137,12 +139,21 @@ class LessonProgressStatus(models.TextChoices):
 
 
 class LessonProgress(BaseModel):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(max_length=50)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='progress')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_progress')
+    status = models.CharField(max_length=20, choices=LessonProgressStatus.choices,
+                              default=LessonProgressStatus.NOT_STARTED)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    watch_time = models.IntegerField(default=0)
+    watch_time = models.IntegerField(default=0, help_text="Watch time in seconds")
+    last_watched_at = models.DateTimeField(null=True, blank=True)
+    completion_percentage = models.FloatField(default=0.0, help_text="Completion percentage (0-100)")
+
+    class Meta:
+        unique_together = ['lesson', 'user']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.lesson.name} - {self.status}"
 
 
 class CourseProgress(BaseModel):
@@ -208,9 +219,13 @@ class Topic(BaseModel):
 
 class Comment(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments")
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     content = models.TextField()
+
+    class Meta:
+        ordering = ['created_at']
 
     def __str__(self):
         return self.user.username
